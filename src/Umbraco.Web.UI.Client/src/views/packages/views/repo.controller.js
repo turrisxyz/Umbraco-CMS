@@ -31,6 +31,7 @@
         vm.closeLightbox = closeLightbox;
         vm.search = search;
         vm.installCompleted = false;
+        vm.isCloudProject = false;
 
         var labels = {};
 
@@ -72,7 +73,10 @@
                 labels.installStateCompleted = values[4];
             });
 
-            $q.all([
+            // TODO: determine if running on Cloud via an API call.
+            vm.isCloudProject = true;
+
+            var requests = [
                 ourPackageRepositoryResource.getCategories()
                     .then(function (cats) {
                         vm.categories = cats;
@@ -86,7 +90,16 @@
                         vm.packages = pack.packages;
                         vm.pagination.totalPages = Math.ceil(pack.total / vm.pagination.pageSize);
                     })
-            ])
+            ];
+
+            if (vm.isCloudProject) {
+                requests.push(ourPackageRepositoryResource.getCloudCompatible(8)
+                    .then(function (pack) {
+                        vm.cloudCompatible = pack.packages;
+                    }));
+            }
+
+            $q.all(requests)
                 .then(function () {
                     vm.loading = false;
                 });

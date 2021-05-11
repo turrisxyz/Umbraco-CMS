@@ -36,6 +36,17 @@ function ourPackageRepositoryResource($q, $http, umbDataFormatter, umbRequestHel
                $http.get(baseurl + "?pageIndex=0&pageSize=" + maxResults + "&category=" + category + "&order=Popular&version=" + Umbraco.Sys.ServerVariables.application.version),
                'Failed to query packages');
         },
+
+        getCloudCompatible: function (maxResults) {
+
+            if (maxResults === undefined) {
+                maxResults = 100;
+            }
+
+            return umbRequestHelper.resourcePromise(
+                $http.get(baseurl + "?pageIndex=0&pageSize=" + maxResults + "&category=uaas&order=Popular&version=" + Umbraco.Sys.ServerVariables.application.version),
+                'Failed to query packages');
+        },
        
         search: function (pageIndex, pageSize, orderBy, category, query, canceler) {
 

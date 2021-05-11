@@ -5,6 +5,46 @@
     <!-- LIST -->
     <div class="umb-packages-view-wrapper" ng-if="vm.packageViewState === 'packageList'">
 
+        <div ng-show="vm.loading === false && vm.isCloudProject">
+            <h3><strong><localize key="packager_cloudCompatible">Verified Umbraco Cloud Compatible</localize></strong></h3>
+
+            <div class="umb-packages">
+
+                <div class="umb-package" ng-repeat="package in vm.cloudCompatible">
+                    <button type="button" class="umb-package-link" ng-click="vm.showPackageDetails(package)">
+
+                        <div class="flex flex-column">
+                            <div class="umb-package-icon">
+                                <img ng-src="{{package.icon}}" alt="" />
+                            </div>
+
+                            <div class="umb-package-info">
+                                <div class="umb-package-name">{{package.name}}</div>
+                                <div class="umb-package-description">{{package.excerpt | limitTo: 40}}<span ng-if="package.excerpt > (package.excerpt | limitTo: 40)">...</span></div>
+
+                                <div class="umb-package-numbers">
+                                    <small class="umb-package-downloads">
+                                        <i class="icon-download-alt" aria-hidden="true"></i>
+                                        <strong>{{package.downloads}}</strong>
+                                    </small>
+                                    <small class="umb-package-likes">
+                                        <i class="icon-hearts" aria-hidden="true"></i>
+                                        <strong>{{package.likes}}</strong>
+                                    </small>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </button>
+                </div> <!-- end package -->
+
+            </div> <!-- end packages -->
+
+            <br/>
+            <h3><strong><localize key="packager_packagesOther">Other Packages</localize></strong></h3>
+        </div>
+
         <div class="umb-packages-section">
             <div class="umb-packages-search">
                 <label for="package-query" class="sr-only">

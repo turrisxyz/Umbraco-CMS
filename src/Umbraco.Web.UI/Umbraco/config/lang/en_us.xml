@@ -1250,6 +1250,8 @@ To manage your website, simply open the Umbraco backoffice and start adding cont
     <key alias="packageSearchResults">Results for</key>
     <key alias="packageNoResults">We couldn’t find anything for</key>
     <key alias="packageNoResultsDescription">Please try searching for another package or browse through the categories</key>
+    <key alias="cloudCompatible">Verified Umbraco Cloud compatible</key>
+    <key alias="packagesOther">Other packages</key>
     <key alias="packagesPopular">Popular</key>
     <key alias="packagesNew">New releases</key>
     <key alias="packageHas">has</key>
