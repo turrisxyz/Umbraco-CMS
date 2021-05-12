@@ -10,7 +10,7 @@
 
             <div class="umb-packages">
 
-                <div class="umb-package" ng-repeat="package in vm.cloudCompatible">
+                <div class="umb-package" ng-repeat="package in vm.cloudCompatible | orderBy:'name'">
                     <button type="button" class="umb-package-link" ng-click="vm.showPackageDetails(package)">
 
                         <div class="flex flex-column">
@@ -42,7 +42,7 @@
             </div> <!-- end packages -->
 
             <br/>
-            <h3><strong><localize key="packager_packagesOther">Other Packages</localize></strong></h3>
+            <h3><strong><localize key="packager_packagesAll">All Packages</localize></strong></h3>
         </div>
 
         <div class="umb-packages-section">
