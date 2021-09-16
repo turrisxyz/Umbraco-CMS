@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.DependencyModel;
+using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Infrastructure.ModelsBuilder
 {
@@ -73,7 +74,7 @@ namespace Umbraco.Cms.Infrastructure.ModelsBuilder
         /// <returns>A stream containing the compiled DLL</returns>
         public Stream CompilePackage(string packageName, Stream packageXml, string packageMigrationCode)
         {
-            CSharpCompilation compilation = CreateCompilation(packageName, packageMigrationCode);
+            CSharpCompilation compilation = CreateCompilation(packageName.CleanStringForNamespace(), packageMigrationCode);
 
             string xmlName = $"{packageName}.package.xml";
             ResourceDescription[] resources = new[]
