@@ -68,19 +68,20 @@ namespace Umbraco.Cms.Infrastructure.ModelsBuilder
         /// <summary>
         /// Compiles package xml, together with a package migration class into a single dll
         /// </summary>
-        /// <param name="packageName">The Package name, will be used as the assembly name, and resource namespace</param>
+        /// <param name="resourceNameSpace">The Package name, will be used as the assembly name, and resource namespace</param>
+        /// <param name="resourceFileName">The filename of the resource</param>
         /// <param name="packageXml">The package XML to be added to the dll</param>
         /// <param name="packageMigrationCode">Source code for a package migration as a string</param>
         /// <returns>A stream containing the compiled DLL</returns>
-        public Stream CompilePackage(string packageName, Stream packageXml, string packageMigrationCode)
+        public Stream CompilePackage(string resourceNameSpace, string resourceFileName, Stream packageXml, string packageMigrationCode)
         {
-            CSharpCompilation compilation = CreateCompilation(packageName.CleanStringForNamespace(), packageMigrationCode);
+            CSharpCompilation compilation = CreateCompilation(resourceNameSpace.CleanStringForNamespace(), packageMigrationCode);
 
-            string xmlName = $"{packageName}.package.xml";
+            string resourceName = $"{resourceNameSpace}.{resourceFileName}";
             ResourceDescription[] resources = new[]
             {
                 new ResourceDescription(
-                    xmlName,
+                    resourceName,
                     () => packageXml,
                     true
                     )

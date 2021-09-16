@@ -29,11 +29,12 @@ namespace Umbraco.Cms.Infrastructure.Packaging
         public Stream CreateCompiledPackage(PackageDefinition packageDefinition)
         {
             var packageName = packageDefinition.Name;
+            var fileName = Path.GetFileName(packageDefinition.PackagePath);
             // TODO: Get Version string from package definition.
             var migrationCode = GenerateDefaultMigrationCode(packageName, "1.0.0.0");
             FileStream packageXml = File.OpenRead(packageDefinition.PackagePath);
 
-            return RoslynCompiler.CompilePackage(packageName, packageXml, migrationCode);
+            return RoslynCompiler.CompilePackage(packageName, fileName, packageXml, migrationCode);
         }
 
         private string GenerateDefaultMigrationCode(string packageName, string versionString)
