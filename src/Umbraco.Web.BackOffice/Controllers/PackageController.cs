@@ -164,7 +164,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             // Set custom header so umbRequestHelper.downloadFile can save the correct filename
             Response.Headers.Add("x-filename", WebUtility.UrlEncode(fileName));
 
-            var stream = _packagingService.GenerateNuGetPackage(package);
+            var stream = new MemoryStream();
             return new FileStreamResult(stream, new MediaTypeHeaderValue("application/octet-stream"));
 
         }
