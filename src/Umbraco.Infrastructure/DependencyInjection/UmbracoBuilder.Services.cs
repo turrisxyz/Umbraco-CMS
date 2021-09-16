@@ -75,6 +75,7 @@ namespace Umbraco.Cms.Infrastructure.DependencyInjection
             builder.Services.AddUnique<ICreatedPackagesRepository>(factory => CreatePackageRepository(factory, "createdPackages.config"));
             builder.Services.AddUnique<PackageDataInstallation>();
             builder.Services.AddUnique<IPackageInstallation, PackageInstallation>();
+            builder.Services.AddUnique<IPackageCompilationService, PackageCompilationService>();
 
             return builder;
         }
