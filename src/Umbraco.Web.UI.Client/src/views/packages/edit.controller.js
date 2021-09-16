@@ -20,6 +20,7 @@
     vm.openViewPicker = openViewPicker;
     vm.removePackageView = removePackageView;
     vm.downloadFile = downloadFile;
+    vm.generateNuGet = generateNuGet;
 
     vm.selectDocumentType = selectDocumentType;
     vm.selectMediaType = selectMediaType;
@@ -222,6 +223,17 @@
       });
     }
 
+    function generateNuGet() {
+      var url = umbRequestHelper.getApiUrl(
+        "packageApiBaseUrl",
+        "DownloadNuGetPackage",
+        { id: vm.package.id });
+
+      umbRequestHelper.downloadFile(url).then(function () {
+
+      });
+    }
+
     function back() {
       $location.path("packages/packages/created").search("create", null).search("packageId", null);
     }
@@ -277,7 +289,7 @@
     }
 
     function openViewPicker() {
-        
+
         const controlPicker = {
           title: "Select view",
           onlyInitialized: false,

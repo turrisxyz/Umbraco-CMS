@@ -1217,6 +1217,7 @@ To manage your website, simply open the Umbraco backoffice and start adding cont
     <key alias="termsOfUse">terms of use</key>
     <key alias="pathToFile">Path to file</key>
     <key alias="pathToFileDescription">Absolute path to file (ie: /bin/umbraco.bin)</key>
+    <key alias="generateNuGet">Generate NuGet Package</key>
     <key alias="installed">Installed</key>
     <key alias="installedPackages">Installed packages</key>
     <key alias="installFinish">Finish</key>

@@ -15,7 +15,9 @@ using Umbraco.Cms.Web.Common.Attributes;
 using Umbraco.Cms.Web.Common.Authorization;
 using Constants = Umbraco.Cms.Core.Constants;
 using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.Infrastructure.Install;
+using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Web.BackOffice.Controllers
 {
@@ -30,17 +32,20 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private readonly IBackOfficeSecurityAccessor _backofficeSecurityAccessor;
         private readonly PackageMigrationRunner _packageMigrationRunner;
         private readonly ILogger<PackageController> _logger;
+        private readonly IShortStringHelper _shortStringHelper;
 
         public PackageController(
             IPackagingService packagingService,
             IBackOfficeSecurityAccessor backofficeSecurityAccessor,
             PackageMigrationRunner packageMigrationRunner,
-            ILogger<PackageController> logger)
+            ILogger<PackageController> logger,
+            IShortStringHelper shortStringHelper)
         {
             _packagingService = packagingService ?? throw new ArgumentNullException(nameof(packagingService));
             _backofficeSecurityAccessor = backofficeSecurityAccessor ?? throw new ArgumentNullException(nameof(backofficeSecurityAccessor));
             _packageMigrationRunner = packageMigrationRunner;
             _logger = logger;
+            _shortStringHelper = shortStringHelper;
         }
 
         public IEnumerable<PackageDefinition> GetCreatedPackages()
@@ -112,11 +117,11 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
 
                 return ValidationErrorResult.CreateNotificationValidationErrorResult(
                     $"Package migration failed on package {packageName} with error: {ex.Message}. Check log for full details.");
-            }            
+            }
         }
 
         [HttpGet]
-        public IActionResult DownloadCreatedPackage(int id) 
+        public IActionResult DownloadCreatedPackage(int id)
         {
             var package = _packagingService.GetCreatedPackageById(id);
             if (package == null)
@@ -141,6 +146,26 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             {
                 Charset = encoding.WebName,
             });
+
+        }
+
+        [HttpGet]
+        public IActionResult DownloadNuGetPackage(int id)
+        {
+            var package = _packagingService.GetCreatedPackageById(id);
+            if (package == null)
+                return NotFound();
+
+            if (!System.IO.File.Exists(package.PackagePath))
+                return ValidationProblem("No file found for path " + package.PackagePath);
+
+            var fileName = $"{package.Name.ToSafeAlias(_shortStringHelper)}.nupkg";
+
+            // Set custom header so umbRequestHelper.downloadFile can save the correct filename
+            Response.Headers.Add("x-filename", WebUtility.UrlEncode(fileName));
+
+            var stream = _packagingService.GenerateNuGetPackage(package);
+            return new FileStreamResult(stream, new MediaTypeHeaderValue("application/octet-stream"));
 
         }
 

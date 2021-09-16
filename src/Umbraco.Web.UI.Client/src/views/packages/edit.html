@@ -168,6 +168,14 @@
 
           <umb-button ng-if="vm.package.packagePath"
                       type="button"
+                      action="vm.generateNuGet()"
+                      disabled="vm.loading || vm.buttonState=='busy'"
+                      button-style="info"
+                      label-key="packager_generateNuGet">
+          </umb-button>
+
+          <umb-button ng-if="vm.package.packagePath"
+                      type="button"
                       action="vm.downloadFile(vm.package.id)"
                       disabled="vm.loading || vm.buttonState=='busy'"
                       button-style="info"
