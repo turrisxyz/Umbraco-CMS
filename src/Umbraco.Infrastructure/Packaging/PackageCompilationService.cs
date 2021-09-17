@@ -34,7 +34,7 @@ namespace Umbraco.Cms.Infrastructure.Packaging
             var migrationCode = GenerateDefaultMigrationCode(packageName, "1.0.0.0");
             FileStream packageXml = File.OpenRead(packageDefinition.PackagePath);
 
-            return RoslynCompiler.CompilePackage(packageName, fileName, packageXml, migrationCode);
+            return RoslynCompiler.CompilePackage(packageName.CleanStringForNamespace(), fileName, packageXml, migrationCode);
         }
 
         private string GenerateDefaultMigrationCode(string packageName, string versionString)

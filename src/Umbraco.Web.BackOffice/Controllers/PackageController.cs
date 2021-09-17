@@ -17,6 +17,7 @@ using Constants = Umbraco.Cms.Core.Constants;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.Infrastructure.Install;
+using Umbraco.Cms.Infrastructure.Packaging;
 using Umbraco.Extensions;
 
 namespace Umbraco.Cms.Web.BackOffice.Controllers
@@ -33,19 +34,22 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         private readonly PackageMigrationRunner _packageMigrationRunner;
         private readonly ILogger<PackageController> _logger;
         private readonly IShortStringHelper _shortStringHelper;
+        private readonly INugetPackageCreationService _nugetPackageCreationService;
 
         public PackageController(
             IPackagingService packagingService,
             IBackOfficeSecurityAccessor backofficeSecurityAccessor,
             PackageMigrationRunner packageMigrationRunner,
             ILogger<PackageController> logger,
-            IShortStringHelper shortStringHelper)
+            IShortStringHelper shortStringHelper,
+            INugetPackageCreationService nugetPackageCreationService)
         {
             _packagingService = packagingService ?? throw new ArgumentNullException(nameof(packagingService));
             _backofficeSecurityAccessor = backofficeSecurityAccessor ?? throw new ArgumentNullException(nameof(backofficeSecurityAccessor));
             _packageMigrationRunner = packageMigrationRunner;
             _logger = logger;
             _shortStringHelper = shortStringHelper;
+            _nugetPackageCreationService = nugetPackageCreationService;
         }
 
         public IEnumerable<PackageDefinition> GetCreatedPackages()
@@ -152,19 +156,25 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
         [HttpGet]
         public IActionResult DownloadNuGetPackage(int id)
         {
-            var package = _packagingService.GetCreatedPackageById(id);
+            PackageDefinition package = _packagingService.GetCreatedPackageById(id);
             if (package == null)
+            {
                 return NotFound();
+            }
 
             if (!System.IO.File.Exists(package.PackagePath))
+            {
                 return ValidationProblem("No file found for path " + package.PackagePath);
+            }
 
-            var fileName = $"{package.Name.ToSafeAlias(_shortStringHelper)}.nupkg";
+            // TODO: Use Version number from package definition
+            var fileName = $"{package.Name.ToSafeAlias(_shortStringHelper)}.1.0.0-rc003.nupkg";
 
             // Set custom header so umbRequestHelper.downloadFile can save the correct filename
             Response.Headers.Add("x-filename", WebUtility.UrlEncode(fileName));
 
-            var stream = new MemoryStream();
+            Stream stream = _nugetPackageCreationService.CreateNugetPackage(package);
+            stream.Position = 0;
             return new FileStreamResult(stream, new MediaTypeHeaderValue("application/octet-stream"));
 
         }
