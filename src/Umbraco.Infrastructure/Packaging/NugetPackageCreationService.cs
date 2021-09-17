@@ -95,10 +95,16 @@ namespace Umbraco.Cms.Infrastructure.Packaging
             metaData.Add(description);
 
             var dependencies = new XElement(nameSpace + "dependencies");
+            var netStandardGroup = new XElement(nameSpace + "group");
+            netStandardGroup.Add(new XAttribute("targetFramework", ".NETStandard2.0"));
+
             var infrastructureDependency = new XElement(nameSpace + "dependency");
             infrastructureDependency.Add(new XAttribute("id", "Umbraco.Cms.Infrastructure"));
+            // TODO: Get the current version number
             infrastructureDependency.Add(new XAttribute("version", "9.0.0-rc003"));
-            dependencies.Add(infrastructureDependency);
+
+            netStandardGroup.Add(infrastructureDependency);
+            dependencies.Add(netStandardGroup);
             metaData.Add(dependencies);
 
             return nuspecXml;
