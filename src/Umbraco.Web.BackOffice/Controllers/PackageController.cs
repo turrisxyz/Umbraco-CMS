@@ -15,6 +15,7 @@ using Umbraco.Cms.Web.Common.Attributes;
 using Umbraco.Cms.Web.Common.Authorization;
 using Constants = Umbraco.Cms.Core.Constants;
 using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Models.Packaging;
 using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.Infrastructure.Install;
 using Umbraco.Cms.Infrastructure.Packaging;
@@ -167,16 +168,12 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 return ValidationProblem("No file found for path " + package.PackagePath);
             }
 
-            // TODO: Use Version number from package definition
-            // TODO: This must be the same as the ID in the NuSpec
-            var fileName = $"{package.Name.ToSafeAlias(_shortStringHelper)}.1.0.0-rc003.nupkg";
+            NugetPackage nugetPackage = _nugetPackageCreationService.CreateNugetPackage(package);
 
             // Set custom header so umbRequestHelper.downloadFile can save the correct filename
-            Response.Headers.Add("x-filename", WebUtility.UrlEncode(fileName));
+            Response.Headers.Add("x-filename", WebUtility.UrlEncode(nugetPackage.PackageName));
 
-            Stream stream = _nugetPackageCreationService.CreateNugetPackage(package);
-            stream.Position = 0;
-            return new FileStreamResult(stream, new MediaTypeHeaderValue("application/octet-stream"));
+            return new FileStreamResult(nugetPackage.PackageStream, new MediaTypeHeaderValue("application/octet-stream"));
 
         }
 

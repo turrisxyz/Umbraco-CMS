@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Xml.Linq;
 using Umbraco.Cms.Core.Configuration;
+using Umbraco.Cms.Core.Models.Packaging;
 using Umbraco.Cms.Core.Packaging;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Extensions;
@@ -25,7 +26,7 @@ namespace Umbraco.Cms.Infrastructure.Packaging
             _umbracoVersion = umbracoVersion;
         }
 
-        public Stream CreateNugetPackage(PackageDefinition packageDefinition)
+        public NugetPackage CreateNugetPackage(PackageDefinition packageDefinition)
         {
             var nameSpaceName = packageDefinition.Name.CleanStringForNamespace();
             if (string.IsNullOrEmpty(nameSpaceName))
@@ -90,7 +91,10 @@ namespace Umbraco.Cms.Infrastructure.Packaging
                 }
             }
 
-            return zipStream;
+            // TODO: Add version number
+            var packageFileName = $"{nameSpaceName}.1.0.0-rc003.nupkg";
+            zipStream.Seek(0, SeekOrigin.Begin);
+            return new NugetPackage(packageFileName, zipStream);
         }
 
         private XDocument CreateNuspecFile(string nameSpaceName, string currentUserName)
