@@ -168,6 +168,7 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             }
 
             // TODO: Use Version number from package definition
+            // TODO: This must be the same as the ID in the NuSpec
             var fileName = $"{package.Name.ToSafeAlias(_shortStringHelper)}.1.0.0-rc003.nupkg";
 
             // Set custom header so umbRequestHelper.downloadFile can save the correct filename
