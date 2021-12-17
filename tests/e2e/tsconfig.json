@@ -1,0 +1,22 @@
+{
+  "compilerOptions":
+  {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
+    "downlevelIteration": true,
+    "module": "es6",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "target": "es6",
+    "paths":
+    {
+      "@fixtures/*": ["fixtures/*"]
+    }
+  },
+  "include": [
+    "./fixtures",
+    "./tests"
+  ],
+}
