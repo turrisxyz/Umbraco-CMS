@@ -1,9 +1,9 @@
 <div class="umb-package-details">
 
-    
+    <umb-load-indicator ng-if="loading === true"></umb-load-indicator>
 
     <!-- Main Column -->
-    <div class="umb-package-details__main-content">
+    <div class="umb-package-details__main-content" ng-if="loading === false">
 
         <!-- Links -->
         <umb-box data-element="node-info-urls" class="mb4">
@@ -12,13 +12,13 @@
 
                 <umb-empty-state ng-if="!nodeUrl"
                                  size="small">
-                    <localize key="content_noMediaLink"></localize>
+                    <localize key="content_noMediaLink">This media item has no link</localize>
                 </umb-empty-state>
 
                 <ul ng-if="nodeUrl" class="nav nav-stacked mb0">
                     <li>
                         <a href="" ng-attr-href="{{node.extension !== 'svg' ? nodeUrl : undefined}}" ng-click="node.extension === 'svg' && openSVG()" target="_blank" rel="noopener" class="umb-outline">
-                            <i class="icon icon-out" aria-hidden="true"></i>
+                            <umb-icon icon="icon-out" class="icon"></umb-icon>
                             <span>{{nodeFileName}}</span>
                         </a>
                     </li>
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="umb-package-details__sidebar">
+    <div class="umb-package-details__sidebar" ng-if="loading === false">
         <!-- General Info -->
         <umb-box data-element="node-info-general">
             <umb-box-header title-key="general_general"></umb-box-header>
