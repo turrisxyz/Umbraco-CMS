@@ -23,6 +23,7 @@ namespace Umbraco.Cms.Infrastructure.DependencyInjection
             builder.Services.AddScoped<InstallSetupStep, DatabaseConfigureStep>();
             builder.Services.AddScoped<InstallSetupStep, DatabaseInstallStep>();
             builder.Services.AddScoped<InstallSetupStep, DatabaseUpgradeStep>();
+            builder.Services.AddScoped<InstallSetupStep, ProjectMetricsConsentStep>();
 
             builder.Services.AddScoped<InstallSetupStep, CompleteInstallStep>();
 

@@ -26,6 +26,7 @@ namespace Umbraco.Cms.Infrastructure.Install
                 a.OfType<DatabaseConfigureStep>().First(),
                 a.OfType<DatabaseInstallStep>().First(),
                 a.OfType<DatabaseUpgradeStep>().First(),
+                a.OfType<ProjectMetricsConsentStep>().First(),
 
                 // TODO: Add these back once we have a compatible Starter kit
                 // a.OfType<StarterKitDownloadStep>().First(),
