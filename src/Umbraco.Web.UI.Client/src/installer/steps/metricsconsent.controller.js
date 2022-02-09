@@ -4,4 +4,9 @@ angular.module("umbraco.install").controller("Umbraco.Install.ProjectMetricsCont
     installerService.install();
   };
 
+
+  $scope.goBack = function () {
+    installerService.goToPreviousView();
+  }
+
 });

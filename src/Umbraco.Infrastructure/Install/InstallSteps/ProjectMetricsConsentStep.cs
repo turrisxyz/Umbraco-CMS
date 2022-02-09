@@ -3,7 +3,7 @@ using Umbraco.Cms.Core.Install.Models;
 
 namespace Umbraco.Cms.Infrastructure.Install.InstallSteps
 {
-    [InstallSetupStep(InstallationType.Upgrade | InstallationType.NewInstall, "Consent", 30, "")]
+    [InstallSetupStep(InstallationType.Upgrade | InstallationType.NewInstall, "ProjectMetricsConsent", 30, "")]
     public class ProjectMetricsConsentStep : InstallSetupStep<ConsentModel>
     {
         public override string View => "metricsconsent";

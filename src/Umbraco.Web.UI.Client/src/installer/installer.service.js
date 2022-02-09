@@ -5,7 +5,8 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 		current: null,
 		steps: null,
 		loading: true,
-		progress: "100%"
+		progress: "100%",
+    history: []
 	};
 
 	var factTimer;
@@ -36,10 +37,10 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 					"Umbraco has been installed in more than 198 countries"
 					 ];
 
-    /**
-        Returns the description for the step at a given index based on the order of the serverOrder of steps
-        Since they don't execute on the server in the order that they are displayed in the UI.
-    */
+  /**
+      Returns the description for the step at a given index based on the order of the serverOrder of steps
+      Since they don't execute on the server in the order that they are displayed in the UI.
+  */
 	function getDescriptionForStepAtIndex(steps, index) {
 	    var sorted = _.sortBy(steps, "serverOrder");
 	    if (sorted[index]) {
@@ -47,7 +48,8 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 	    }
 	    return null;
 	}
-    /* Returns the description for the given step name */
+
+  /* Returns the description for the given step name */
 	function getDescriptionForStepName(steps, name) {
 	    var found = _.find(steps, function(i) {
 	        return i.name == name;
@@ -137,6 +139,7 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 		},
 
 		gotoStep : function(index){
+      service.saveCurrentStepToHistory();
 			var step = service.status.steps[index];
 			step.view = resolveView(step.view);
 
@@ -150,6 +153,7 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 		},
 
 		gotoNamedStep : function(stepName){
+      service.saveCurrentStepToHistory();
 			var step = _.find(service.status.steps, function(s, index){
 				if (s.view && s.name === stepName) {
 					service.status.index = index;
@@ -165,6 +169,10 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 			service.retrieveCurrentStep();
 			service.status.current = step;
 		},
+
+    saveCurrentStepToHistory : function (){
+      service.status.history.push(service.status.current);
+    },
 
 	    /**
             Finds the next step containing a view. If one is found it stores it as the current step
@@ -214,8 +222,9 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 			}
 		},
 
-        /** Moves the installer forward to the next view, if there are not more views than the installation will commence */
+    /** Moves the installer forward to the next view, if there are not more views than the installation will commence */
 		forward : function(){
+      service.saveCurrentStepToHistory();
 			service.storeCurrentStep();
 			service.status.index++;
 			var found = service.findNextStep();
@@ -229,6 +238,14 @@ angular.module("umbraco.install").factory('installerService', function ($rootSco
 			service.storeCurrentStep();
 			service.gotoStep(service.status.index--);
 		},
+
+    goToPreviousView : function () {
+      var previouslyVisitedStep = service.status.history.pop();
+      service.gotoNamedStep(previouslyVisitedStep.name);
+      // goToNamedStep will add the current step the the history,
+      // but since we're going backwards we don't want that.
+      service.status.history.pop();
+    },
 
 		install : function(){
 			service.storeCurrentStep();
