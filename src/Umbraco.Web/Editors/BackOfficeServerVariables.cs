@@ -308,7 +308,7 @@ namespace Umbraco.Web.Editors
                         },
                         {
                             "iconApiBaseUrl", _urlHelper.GetUmbracoApiServiceBaseUrl<IconController>(
-                                controller => controller.GetIcon(""))
+                                controller => controller.GetIcons())
                         },
                         {
                             "webProfilingBaseUrl", _urlHelper.GetUmbracoApiServiceBaseUrl<WebProfilingController>(

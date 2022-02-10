@@ -120,7 +120,7 @@ function iconHelper($http, $q, $sce, $timeout) {
             .then(function (response) {
                 resourceLoadStatus = "loaded";
 
-                for (const [key, value] of Object.entries(response.data.Data)) {
+                for (const [key, value] of Object.entries(response.data)) {
                     iconCache.push({name: key, svgString: $sce.trustAsHtml(value)})
                 }
 
