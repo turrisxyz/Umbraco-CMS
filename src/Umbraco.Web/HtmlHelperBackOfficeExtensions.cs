@@ -1,23 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.Owin.Security;
 using Newtonsoft.Json;
+using Umbraco.Core;
 using Umbraco.Core.Composing;
+using Umbraco.Core.Configuration;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Features;
+using Umbraco.Web.JavaScript;
 using Umbraco.Web.Models;
-using Umbraco.Core;
+using Umbraco.Web.Security;
 
 namespace Umbraco.Web
 {
-    using Core.Configuration;
-    using System;
-    using Umbraco.Web.JavaScript;
-    using Umbraco.Web.Security;
-
     /// <summary>
     /// HtmlHelper extensions for the back office
     /// </summary>
@@ -47,7 +46,7 @@ namespace Umbraco.Web
             var str = @"<script type=""text/javascript"">
                 var Umbraco = {};
                 Umbraco.Sys = {};
-                Umbraco.Sys.ServerVariables = " + JsonConvert.SerializeObject(minVars) + @";
+                Umbraco.Sys.ServerVariables = " + Serialize(minVars) + @";
             </script>";
 
             return html.Raw(str);
@@ -87,7 +86,7 @@ namespace Umbraco.Web
                 sb.AppendLine($@"errorProvider: '{externalLoginErrors.AuthenticationType}',");
             sb.AppendLine(@"errors: errors,");
             sb.Append(@"providers: ");
-            sb.AppendLine(JsonConvert.SerializeObject(loginProviders));
+            sb.AppendLine(Serialize(loginProviders));
             sb.AppendLine(@"});");
 
             return html.Raw(sb.ToString());
@@ -122,11 +121,10 @@ namespace Umbraco.Web
 
             var resetCodeModel = val as ValidatePasswordResetCodeModel;
 
-
             sb.AppendLine(@"app.value(""resetPasswordCodeInfo"", {");
             sb.AppendLine(@"errors: errors,");
             sb.Append(@"resetCodeModel: ");
-            sb.AppendLine(JsonConvert.SerializeObject(resetCodeModel));
+            sb.AppendLine(Serialize(resetCodeModel));
             sb.AppendLine(@"});");
 
             return html.Raw(sb.ToString());
@@ -140,11 +138,23 @@ namespace Umbraco.Web
             var sb = new StringBuilder();
 
             sb.AppendLine(@"app.value(""tinyMceAssets"",");
-            sb.AppendLine(JsonConvert.SerializeObject(files));
+            sb.AppendLine(Serialize(files));
             sb.AppendLine(@");");
 
 
             return html.Raw(sb.ToString());
+        }
+
+        private static string Serialize(object value)
+        {
+            var sb = new StringBuilder();
+            using (var textWriter = new StringWriter(sb))
+            {
+                var jsonSerializer = JsonSerializer.Create();
+                jsonSerializer.Serialize(textWriter, value);
+            }
+
+            return sb.ToString();
         }
     }
 }

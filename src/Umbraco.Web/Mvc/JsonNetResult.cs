@@ -1,40 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Umbraco.Web.Mvc
 {
-
     /// <summary>
-    /// Custom json result using newtonsoft json.net
+    /// Custom JSON result using Newtonsoft.Json.
     /// </summary>
     public class JsonNetResult : ActionResult
     {
         public Encoding ContentEncoding { get; set; }
+
         public string ContentType { get; set; }
+
         public object Data { get; set; }
 
         public JsonSerializerSettings SerializerSettings { get; set; }
-        public Formatting Formatting { get; set; }
 
-        /// <summary>
-        /// Default, unchanged JsonSerializerSettings
-        /// </summary>
-        public static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings();
+        public Formatting Formatting { get; set; } = Formatting.None;
+
+        public static readonly JsonSerializerSettings DefaultJsonSerializerSettings = new JsonSerializerSettings()
+        {
+            ContractResolver = new DefaultContractResolver()
+            {
+                NamingStrategy = new DefaultNamingStrategy()
+            }
+        };
 
         public JsonNetResult()
-        {
-            SerializerSettings = new JsonSerializerSettings();
-        }
+            : this(DefaultJsonSerializerSettings)
+        { }
+
         public JsonNetResult(JsonSerializerSettings jsonSerializerSettings)
-        {
-            SerializerSettings = jsonSerializerSettings;
-        }
+            => SerializerSettings = jsonSerializerSettings;
 
         public override void ExecuteResult(ControllerContext context)
         {
@@ -52,14 +53,14 @@ namespace Umbraco.Web.Mvc
 
             if (Data != null)
             {
-                var writer = new JsonTextWriter(response.Output) { Formatting = Formatting };
+                using var writer = new JsonTextWriter(response.Output)
+                {
+                    Formatting = Formatting
+                };
 
                 var serializer = JsonSerializer.Create(SerializerSettings);
                 serializer.Serialize(writer, Data);
-
-                writer.Flush();
             }
         }
     }
-
 }

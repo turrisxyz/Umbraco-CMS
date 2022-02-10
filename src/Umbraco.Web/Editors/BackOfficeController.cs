@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.UI;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Configuration;
@@ -179,10 +178,14 @@ namespace Umbraco.Web.Editors
                 : CultureInfo.GetCultureInfo(culture);
 
             // TODO: Remove this check in v9 when these interfaces merge
-            if(Services.TextService is ILocalizedTextService2 localizedText2)
+            if (Services.TextService is ILocalizedTextService2 localizedText2)
             {
                 var nestedDictionary2 = localizedText2.GetAllStoredValuesByAreaAndAlias(cultureInfo);
-                return new JsonNetResult { Data = nestedDictionary2, Formatting = Formatting.None };
+
+                return new JsonNetResult
+                {
+                    Data = nestedDictionary2
+                };
             }
 
             var allValues = Services.TextService.GetAllStoredValues(cultureInfo);
@@ -191,6 +194,7 @@ namespace Umbraco.Web.Editors
                 var slashIndex = kv.Key.IndexOf('/');
                 var areaAlias = kv.Key.Substring(0, slashIndex);
                 var valueAlias = kv.Key.Substring(slashIndex + 1);
+
                 return new
                 {
                     areaAlias,
@@ -204,7 +208,10 @@ namespace Umbraco.Web.Editors
                 .ToDictionary(pv => pv.Key, pv =>
                     pv.ToDictionary(pve => pve.valueAlias, pve => pve.value));
 
-            return new JsonNetResult(JsonNetResult.DefaultJsonSerializerSettings) { Data = nestedDictionary, Formatting = Formatting.None };
+            return new JsonNetResult()
+            {
+                Data = nestedDictionary
+            };
         }
 
         /// <summary>
@@ -251,7 +258,10 @@ namespace Umbraco.Web.Editors
                     GetAssetList,
                     new TimeSpan(0, 2, 0));
 
-            return new JsonNetResult(JsonNetResult.DefaultJsonSerializerSettings) { Data = result, Formatting = Formatting.None };
+            return new JsonNetResult()
+            {
+                Data = result
+            };
         }
 
         [UmbracoAuthorize(Order = 0)]
@@ -259,10 +269,12 @@ namespace Umbraco.Web.Editors
         public JsonNetResult GetGridConfig()
         {
             var gridConfig = Current.Configs.Grids();
-            return new JsonNetResult(JsonNetResult.DefaultJsonSerializerSettings) { Data = gridConfig.EditorsConfig.Editors, Formatting = Formatting.None };
+
+            return new JsonNetResult()
+            {
+                Data = gridConfig.EditorsConfig.Editors
+            };
         }
-
-
 
         /// <summary>
         /// Returns the JavaScript object representing the static server variables javascript object
@@ -429,7 +441,7 @@ namespace Umbraco.Web.Editors
                     shouldSignIn = autoLinkOptions.OnExternalLogin(user, loginInfo);
                     if (shouldSignIn == false)
                     {
-                        Logger.Warn<BackOfficeController, string,int>("The AutoLinkOptions of the external authentication provider '{LoginProvider}' have refused the login based on the OnExternalLogin method. Affected user id: '{UserId}'", loginInfo.Login.LoginProvider, user.Id);
+                        Logger.Warn<BackOfficeController, string, int>("The AutoLinkOptions of the external authentication provider '{LoginProvider}' have refused the login based on the OnExternalLogin method. Affected user id: '{UserId}'", loginInfo.Login.LoginProvider, user.Id);
                     }
                 }
 
