@@ -1,4 +1,5 @@
 using System;
+using System.IO.Compression;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Configuration.Models;
@@ -12,7 +13,7 @@ using Umbraco.Cms.Infrastructure.Migrations.Expressions.Common;
 
 namespace Umbraco.Cms.Infrastructure.Packaging
 {
-    internal class ImportPackageBuilder : ExpressionBuilderBase<ImportPackageBuilderExpression>, IImportPackageBuilder, IExecutableBuilder
+    internal class ImportPackageBuilder : ExpressionBuilderBase<ImportPackageBuilderExpression>, IImportPackageBuilder2, IExecutableBuilder
     {
         public ImportPackageBuilder(
             IPackagingService packagingService,
@@ -39,10 +40,11 @@ namespace Umbraco.Cms.Infrastructure.Packaging
 
         public IExecutableBuilder FromEmbeddedResource<TPackageMigration>()
             where TPackageMigration : PackageMigrationBase
-        {
-            Expression.EmbeddedResourceMigrationType = typeof(TPackageMigration);
-            return this;
-        }
+            => FromEmbeddedResource(typeof(TPackageMigration));
+
+        public IExecutableBuilder FromEmbeddedResource<TPackageMigration>(ZipArchive packageZipArchive)
+            where TPackageMigration : PackageMigrationBase
+            => FromEmbeddedResource(typeof(TPackageMigration), packageZipArchive);
 
         public IExecutableBuilder FromEmbeddedResource(Type packageMigrationType)
         {
@@ -50,9 +52,23 @@ namespace Umbraco.Cms.Infrastructure.Packaging
             return this;
         }
 
+        public IExecutableBuilder FromEmbeddedResource(Type packageMigrationType, ZipArchive packageZipArchive)
+        {
+            Expression.EmbeddedResourceMigrationType = packageMigrationType;
+            Expression.PackageZipArchive = packageZipArchive;
+            return this;
+        }
+
         public IExecutableBuilder FromXmlDataManifest(XDocument packageDataManifest)
         {
             Expression.PackageDataManifest = packageDataManifest;
+            return this;
+        }
+
+        public IExecutableBuilder FromXmlDataManifest(XDocument packageDataManifest, ZipArchive packageZipArchive)
+        {
+            Expression.PackageDataManifest = packageDataManifest;
+            Expression.PackageZipArchive = packageZipArchive;
             return this;
         }
     }
