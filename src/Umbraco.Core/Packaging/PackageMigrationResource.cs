@@ -1,9 +1,6 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Umbraco.Extensions;
@@ -12,89 +9,37 @@ namespace Umbraco.Cms.Core.Packaging
 {
     public static class PackageMigrationResource
     {
-        private static Stream GetEmbeddedPackageZipStream(Type planType)
-        {
-            // lookup the embedded resource by convention
-            Assembly currentAssembly = planType.Assembly;
-            var fileName = $"{planType.Namespace}.package.zip";
-            Stream stream = currentAssembly.GetManifestResourceStream(fileName);
-
-            return stream;
-        }
+        public static XDocument GetEmbeddedPackageDataManifest(Type planType)
+            => GetEmbeddedPackageDataManifest(planType, out _);
 
         public static XDocument GetEmbeddedPackageDataManifest(Type planType, out ZipArchive zipArchive)
-        {
-            XDocument packageXml;
-            var zipStream = GetEmbeddedPackageZipStream(planType);
-            if (zipStream is not null)
-            {
-                zipArchive = GetPackageDataManifest(zipStream, out packageXml);
-                return packageXml;
-            }
-
-            zipArchive = null;
-            packageXml = GetEmbeddedPackageXmlDoc(planType);
-            return packageXml;
-        }
-
-        public static XDocument GetEmbeddedPackageDataManifest(Type planType)
-        {
-            return GetEmbeddedPackageDataManifest(planType, out _);
-        }
-
-        private static XDocument GetEmbeddedPackageXmlDoc(Type planType)
-        {
-            // lookup the embedded resource by convention
-            Assembly currentAssembly = planType.Assembly;
-            var fileName = $"{planType.Namespace}.package.xml";
-            Stream stream = currentAssembly.GetManifestResourceStream(fileName);
-            if (stream == null)
-            {
-                return null;
-            }
-            XDocument xml;
-            using (stream)
-            {
-                xml = XDocument.Load(stream);
-            }
-            return xml;
-        }
-
-        public static string GetEmbeddedPackageDataManifestHash(Type planType)
-        {
-            // SEE: HashFromStreams in the benchmarks project for how fast this is. It will run
-            // on every startup for every embedded package.zip. The bigger the zip, the more time it takes.
-            // But it is still very fast ~303ms for a 100MB file. This will only be an issue if there are
-            // several very large package.zips.
-
-            using Stream stream = GetEmbeddedPackageZipStream(planType);
-
-            if (stream is not null)
-            {
-                return stream.GetStreamHash();
-            }
-
-            var xml = GetEmbeddedPackageXmlDoc(planType);
-
-            if (xml is not null)
-            {
-                return xml.ToString();
-            }
-
-            throw new IOException("Missing embedded files for planType: " + planType);
-        }
+            => TryGetEmbeddedPackageDataManifest(planType, out XDocument packageXml, out zipArchive) ? packageXml : null;
 
         public static bool TryGetEmbeddedPackageDataManifest(Type planType, out XDocument packageXml, out ZipArchive zipArchive)
         {
-            var zipStream = GetEmbeddedPackageZipStream(planType);
-            if (zipStream is not null)
+            // Always try to get embedded XML
+            packageXml = GetEmbeddedPackageXmlDoc(planType);
+
+            // Fallback to embedded ZIP
+            using Stream packageZipStream = GetEmbeddedPackageZipStream(planType);
+            if (packageZipStream is not null)
             {
-                zipArchive = GetPackageDataManifest(zipStream, out packageXml);
-                return true;
+                zipArchive = GetPackageDataManifest(packageZipStream, out var zipPackageXml);
+
+                // Only use XML from ZIP when it's not already available
+                packageXml ??= zipPackageXml;
+
+                // Cleanup if XML is still not available
+                if (packageXml is null)
+                {
+                    zipArchive = null;
+                }
+            }
+            else
+            {
+                zipArchive = null;
             }
 
-            zipArchive = null;
-            packageXml = GetEmbeddedPackageXmlDoc(planType);
             return packageXml is not null;
         }
 
@@ -105,11 +50,13 @@ namespace Umbraco.Cms.Core.Packaging
                 throw new ArgumentNullException(nameof(packageZipStream));
             }
 
-            var zip = new ZipArchive(packageZipStream, ZipArchiveMode.Read);
-            ZipArchiveEntry packageXmlEntry = zip.GetEntry("package.xml");
+            var zipArchive = new ZipArchive(packageZipStream, ZipArchiveMode.Read);
+            ZipArchiveEntry packageXmlEntry = zipArchive.GetEntry("package.xml");
             if (packageXmlEntry == null)
             {
-                throw new InvalidOperationException("Zip package does not contain the required package.xml file");
+                packageXml = null;
+
+                return zipArchive;
             }
 
             using (Stream packageXmlStream = packageXmlEntry.Open())
@@ -121,7 +68,57 @@ namespace Umbraco.Cms.Core.Packaging
                 packageXml = XDocument.Load(xmlReader);
             }
 
-            return zip;
+            return zipArchive;
         }
+
+        public static string GetEmbeddedPackageDataManifestHash(Type planType)
+        {
+            string hash = null;
+
+            var packageXml = GetEmbeddedPackageXmlDoc(planType);
+            if (packageXml is not null)
+            {
+                hash += packageXml.ToString();
+            }
+
+            // SEE: HashFromStreams in the benchmarks project for how fast this is. It will run
+            // on every startup for every embedded package.zip. The bigger the zip, the more time it takes.
+            // But it is still very fast ~303ms for a 100MB file. This will only be an issue if there are
+            // several very large package.zips.
+            using Stream packageZipStream = GetEmbeddedPackageZipStream(planType);
+            if (packageZipStream is not null)
+            {
+                hash += packageZipStream.GetStreamHash();
+            }
+
+            if (hash is null)
+            {
+                throw new IOException("Missing embedded resources for migration: " + planType);
+            }
+
+            return hash;
+        }
+
+        private static XDocument GetEmbeddedPackageXmlDoc(Type planType)
+        {
+            // Lookup the embedded resource by convention
+            Stream packageXmlStream = planType.Assembly.GetManifestResourceStream($"{planType.Namespace}.package.xml");
+            if (packageXmlStream == null)
+            {
+                return null;
+            }
+
+            XDocument packageXml;
+            using (packageXmlStream)
+            {
+                packageXml = XDocument.Load(packageXmlStream);
+            }
+
+            return packageXml;
+        }
+
+        private static Stream GetEmbeddedPackageZipStream(Type planType)
+            // Lookup the embedded resource by convention
+            => planType.Assembly.GetManifestResourceStream($"{planType.Namespace}.package.zip");
     }
 }
