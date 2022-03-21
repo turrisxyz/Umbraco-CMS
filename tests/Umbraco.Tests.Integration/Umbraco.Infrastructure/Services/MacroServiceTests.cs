@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -23,8 +24,7 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Infrastructure.Services
     [UmbracoTest(Database = UmbracoTestOptions.Database.NewSchemaPerTest)]
     public class MacroServiceTests : UmbracoIntegrationTest
     {
-        [Obsolete("After merging IMacroWithAliasService interface with IMacroService in Umbraco 11, this should go back to just being GetRequiredService<IMacroService>()")]
-        private IMacroWithAliasService MacroService => GetRequiredService<IMacroService>() as IMacroWithAliasService;
+        private IMacroService MacroService => GetRequiredService<IMacroService>();
 
         [SetUp]
         public void SetupTest()
@@ -50,19 +50,6 @@ namespace Umbraco.Cms.Tests.Integration.Umbraco.Infrastructure.Services
             // Assert
             Assert.IsNotNull(macro);
             Assert.AreEqual("Test1", macro.Name);
-        }
-
-        [Test]
-        public void Can_Get_By_Aliases()
-        {
-            // Act
-            IEnumerable<IMacro> macros = MacroService.GetAll("test1", "test2");
-
-            // Assert
-            Assert.IsNotNull(macros);
-            Assert.AreEqual(2, macros.Count());
-            Assert.AreEqual("Test1", macros.ToArray()[0].Name);
-            Assert.AreEqual("Test2", macros.ToArray()[1].Name);
         }
 
         [Test]
