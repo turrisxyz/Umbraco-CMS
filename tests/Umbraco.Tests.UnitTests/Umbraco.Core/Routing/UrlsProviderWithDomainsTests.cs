@@ -78,14 +78,14 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             domainService.Setup(service => service.GetAll(It.IsAny<bool>()))
                 .Returns((bool incWildcards) => new[]
                 {
-                    new UmbracoDomain("http://domain1.com/en") {Id = 1, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US"},
-                    new UmbracoDomain("http://domain1a.com/en") {Id = 2, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US"},
-                    new UmbracoDomain("http://domain1b.com/en") {Id = 3, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US"},
-                    new UmbracoDomain("http://domain1.com/fr") {Id = 4, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR"},
-                    new UmbracoDomain("http://domain1a.com/fr") {Id = 5, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR"},
-                    new UmbracoDomain("http://domain1b.com/fr") {Id = 6, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR"},
-                    new UmbracoDomain("http://domain3.com/en") {Id = 7, LanguageId = LangEngId, RootContentId = 10031, LanguageIsoCode = "en-US"},
-                    new UmbracoDomain("http://domain3.com/fr") {Id = 8, LanguageId = LangFrId, RootContentId = 10032, LanguageIsoCode = "fr-FR"}
+                    new UmbracoDomain("http://domain1.com/en") { Id = 1, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US", SortOrder = 0 },
+                    new UmbracoDomain("http://domain1a.com/en") { Id = 2, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US", SortOrder = 1 },
+                    new UmbracoDomain("http://domain1b.com/en") { Id = 3, LanguageId = LangEngId, RootContentId = 10011, LanguageIsoCode = "en-US", SortOrder = 2 },
+                    new UmbracoDomain("http://domain1.com/fr") { Id = 4, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR", SortOrder = 0 },
+                    new UmbracoDomain("http://domain1a.com/fr") { Id = 5, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR", SortOrder = 1 },
+                    new UmbracoDomain("http://domain1b.com/fr") { Id = 6, LanguageId = LangFrId, RootContentId = 10012, LanguageIsoCode = "fr-FR", SortOrder = 2 },
+                    new UmbracoDomain("http://domain3.com/en") { Id = 7, LanguageId = LangEngId, RootContentId = 10031, LanguageIsoCode = "en-US", SortOrder = 0 },
+                    new UmbracoDomain("http://domain3.com/fr") { Id = 8, LanguageId = LangFrId, RootContentId = 10032, LanguageIsoCode = "fr-FR", SortOrder = 0 }
                 });
         }
 
@@ -386,8 +386,8 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
                 Console.WriteLine(x);
 
             Assert.AreEqual(2, result.Length);
-            Assert.AreEqual(result[0].Text, "http://domain1b.com/en/1001-1-1/");
-            Assert.AreEqual(result[1].Text, "http://domain1a.com/en/1001-1-1/");
+            Assert.AreEqual(result[0].Text, "http://domain1a.com/en/1001-1-1/");
+            Assert.AreEqual(result[1].Text, "http://domain1b.com/en/1001-1-1/");
         }
 
     }

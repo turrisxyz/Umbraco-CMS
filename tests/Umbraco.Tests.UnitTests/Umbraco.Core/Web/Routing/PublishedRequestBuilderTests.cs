@@ -47,7 +47,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Web.Routing
 
             sut.SetDomain(
                 new DomainAndUri(
-                    new Domain(1, "test", 2, "en-AU", false), new Uri("https://example.com/en-au")));
+                    new Domain(1, "test", 2, "en-AU", false, 0), new Uri("https://example.com/en-au")));
 
             Assert.IsNotNull(sut.Domain);
             Assert.IsNotNull(sut.Culture);
@@ -63,8 +63,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Web.Routing
             string[] cacheExt = new[] { "must-revalidate" };
             var auCulture = "en-AU";
             var usCulture = "en-US";
-            var domain = new DomainAndUri(
-                    new Domain(1, "test", 2, auCulture, false), new Uri("https://example.com/en-au"));
+            var domain = new DomainAndUri(new Domain(1, "test", 2, auCulture, false, 0), new Uri("https://example.com/en-au"));
             IReadOnlyDictionary<string, string> headers = new Dictionary<string, string> { ["Hello"] = "world" };
             var redirect = "https://test.com";
 

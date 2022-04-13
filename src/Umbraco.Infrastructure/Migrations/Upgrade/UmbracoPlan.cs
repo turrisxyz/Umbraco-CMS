@@ -3,6 +3,7 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Configuration;
 using Umbraco.Cms.Core.Semver;
 using Umbraco.Cms.Infrastructure.Migrations.Upgrade.Common;
+using Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_10_0_0;
 using Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_0_0;
 using Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_0_1;
 using Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0;
@@ -284,6 +285,9 @@ namespace Umbraco.Cms.Infrastructure.Migrations.Upgrade
             // TO 9.4.0
             To<AddScheduledPublishingLock>("{DBBA1EA0-25A1-4863-90FB-5D306FB6F1E1}");
             To<UpdateRelationTypesToHandleDependencies>("{DED98755-4059-41BB-ADBD-3FEAB12D1D7B}");
+
+            // To 10.0.0
+            To<AddDomainSortOrder>(new Guid("{ace18303-f74a-40d2-83c4-4ab24b33cbfb}"));
         }
     }
 }

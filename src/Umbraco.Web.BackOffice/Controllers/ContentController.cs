@@ -1927,24 +1927,26 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
 
         public ContentDomainsAndCulture GetCultureAndDomains(int id)
         {
-            var nodeDomains = _domainService.GetAssignedDomains(id, true).ToArray();
-            var wildcard = nodeDomains.FirstOrDefault(d => d.IsWildcard);
-            var domains = nodeDomains.Where(d => !d.IsWildcard).Select(d => new DomainDisplay(d.DomainName, d.LanguageId.GetValueOrDefault(0)));
+            var assignedDomains = _domainService.GetAssignedDomains(id, true).ToArray();
+            var wildcard = assignedDomains.FirstOrDefault(d => d.IsWildcard);
+            var domains = assignedDomains.Where(d => !d.IsWildcard).Select(d => new DomainDisplay(d.DomainName, d.LanguageId.GetValueOrDefault(0)));
+
             return new ContentDomainsAndCulture
             {
-                Domains = domains,
-                Language = wildcard == null || !wildcard.LanguageId.HasValue ? "undefined" : wildcard.LanguageId.ToString()
+                Language = wildcard == null || !wildcard.LanguageId.HasValue ? "undefined" : wildcard.LanguageId.ToString(),
+                Domains = domains
             };
         }
 
         [HttpPost]
         public ActionResult<DomainSave> PostSaveLanguageAndDomains(DomainSave model)
         {
-            foreach (var domain in model.Domains)
+            // Validate domain names
+            foreach (var domainDisplay in model.Domains)
             {
                 try
                 {
-                    var uri = DomainUtilities.ParseUriFromDomainName(domain.Name, new Uri(Request.GetEncodedUrl()));
+                    DomainUtilities.ParseUriFromDomainName(domainDisplay.Name, new Uri(Request.GetEncodedUrl()));
                 }
                 catch (UriFormatException)
                 {
@@ -1952,17 +1954,16 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
                 }
             }
 
+            // Validate node
             var node = _contentService.GetById(model.NodeId);
-
             if (node == null)
             {
                 HttpContext.SetReasonPhrase("Node Not Found.");
                 return NotFound("There is no content node with id {model.NodeId}.");
             }
 
+            // Validate permissions on node
             var permission = _userService.GetPermissions(_backofficeSecurityAccessor.BackOfficeSecurity.CurrentUser, node.Path);
-
-
             if (permission.AssignedPermissions.Contains(ActionAssignDomain.ActionLetter.ToString(), StringComparer.Ordinal) == false)
             {
                 HttpContext.SetReasonPhrase("Permission Denied.");
@@ -1970,111 +1971,116 @@ namespace Umbraco.Cms.Web.BackOffice.Controllers
             }
 
             model.Valid = true;
-            var domains = _domainService.GetAssignedDomains(model.NodeId, true).ToArray();
-            var languages = _localizationService.GetAllLanguages().ToArray();
-            var language = model.Language > 0 ? languages.FirstOrDefault(l => l.Id == model.Language) : null;
 
-            // process wildcard
+            var assignedDomains = _domainService.GetAssignedDomains(model.NodeId, true).ToArray();
+            var languages = _localizationService.GetAllLanguages().ToArray();
+
+            // Process language
+            var language = model.Language > 0 ? languages.FirstOrDefault(l => l.Id == model.Language) : null;
             if (language != null)
             {
-                // yet there is a race condition here...
-                var wildcard = domains.FirstOrDefault(d => d.IsWildcard);
-                if (wildcard != null)
+                // Update or create language on wildcard domain
+                var assignedWildcardDomain = assignedDomains.FirstOrDefault(d => d.IsWildcard);
+                if (assignedWildcardDomain != null)
                 {
-                    wildcard.LanguageId = language.Id;
+                    assignedWildcardDomain.LanguageId = language.Id;
                 }
                 else
                 {
-                    wildcard = new UmbracoDomain("*" + model.NodeId)
+                    assignedWildcardDomain = new UmbracoDomain("*" + model.NodeId)
                     {
                         LanguageId = model.Language,
                         RootContentId = model.NodeId
                     };
                 }
 
-                var saveAttempt = _domainService.Save(wildcard);
+                var saveAttempt = _domainService.Save(assignedWildcardDomain);
                 if (saveAttempt == false)
                 {
                     HttpContext.SetReasonPhrase(saveAttempt.Result.Result.ToString());
                     return BadRequest("Saving domain failed");
                 }
             }
-            else
+
+            // Delete every domain that's in the database, but not in the model
+            foreach (var assignedDomain in assignedDomains.Where(d => (d.IsWildcard && language == null) || (d.IsWildcard == false && model.Domains.All(m => m.Name.InvariantEquals(d.DomainName) == false))))
             {
-                var wildcard = domains.FirstOrDefault(d => d.IsWildcard);
-                if (wildcard != null)
-                {
-                    _domainService.Delete(wildcard);
-                }
+                _domainService.Delete(assignedDomain);
             }
 
-            // process domains
-            // delete every (non-wildcard) domain, that exists in the DB yet is not in the model
-            foreach (var domain in domains.Where(d => d.IsWildcard == false && model.Domains.All(m => m.Name.InvariantEquals(d.DomainName) == false)))
+            // Process domains
+            var savedDomains = new List<IDomain>();
+            foreach (var domainDisplay in model.Domains.Where(m => string.IsNullOrWhiteSpace(m.Name) == false))
             {
-                _domainService.Delete(domain);
-            }
-
-            var names = new List<string>();
-
-            // create or update domains in the model
-            foreach (var domainModel in model.Domains.Where(m => string.IsNullOrWhiteSpace(m.Name) == false))
-            {
-                language = languages.FirstOrDefault(l => l.Id == domainModel.Lang);
+                language = languages.FirstOrDefault(l => l.Id == domainDisplay.Lang);
                 if (language == null)
                 {
                     continue;
                 }
 
-                var name = domainModel.Name.ToLowerInvariant();
-                if (names.Contains(name))
+                var domainName = domainDisplay.Name.ToLowerInvariant();
+                if (savedDomains.Any(d => d.DomainName == domainName))
                 {
-                    domainModel.Duplicate = true;
+                    domainDisplay.Duplicate = true;
                     continue;
                 }
-                names.Add(name);
-                var domain = domains.FirstOrDefault(d => d.DomainName.InvariantEquals(domainModel.Name));
+
+                var domain = assignedDomains.FirstOrDefault(d => d.DomainName.InvariantEquals(domainName));
+                if (domain == null && _domainService.GetByName(domainName) is IDomain existingDomain)
+                {
+                    // Domain name already exists on another node
+                    domainDisplay.Duplicate = true;
+
+                    // Add node breadcrumbs
+                    if (existingDomain.RootContentId is int rootContentId)
+                    {
+                        var breadcrumbs = new List<string>();
+
+                        var content = _contentService.GetById(rootContentId);
+                        while (content != null)
+                        {
+                            breadcrumbs.Add(content.Name);
+                            if (content.ParentId < -1)
+                            {
+                                breadcrumbs.Add("Recycle Bin");
+                            }
+
+                            content = _contentService.GetParent(content);
+                        }
+
+                        breadcrumbs.Reverse();
+                        domainDisplay.Other = "/" + string.Join("/", breadcrumbs);
+                    }
+
+                    continue;
+                }
+
+                // Update or create domain
                 if (domain != null)
                 {
                     domain.LanguageId = language.Id;
-                    _domainService.Save(domain);
-                }
-                else if (_domainService.Exists(domainModel.Name))
-                {
-                    domainModel.Duplicate = true;
-                    var xdomain = _domainService.GetByName(domainModel.Name);
-                    var xrcid = xdomain.RootContentId;
-                    if (xrcid.HasValue)
-                    {
-                        var xcontent = _contentService.GetById(xrcid.Value);
-                        var xnames = new List<string>();
-                        while (xcontent != null)
-                        {
-                            xnames.Add(xcontent.Name);
-                            if (xcontent.ParentId < -1)
-                                xnames.Add("Recycle Bin");
-                            xcontent = _contentService.GetParent(xcontent);
-                        }
-                        xnames.Reverse();
-                        domainModel.Other = "/" + string.Join("/", xnames);
-                    }
                 }
                 else
                 {
-                    // yet there is a race condition here...
-                    var newDomain = new UmbracoDomain(name)
+                    domain = new UmbracoDomain(domainName)
                     {
-                        LanguageId = domainModel.Lang,
-                        RootContentId = model.NodeId
+                        LanguageId = language.Id,
+                        RootContentId = model.NodeId,
                     };
-                    var saveAttempt = _domainService.Save(newDomain);
-                    if (saveAttempt == false)
-                    {
-                        HttpContext.SetReasonPhrase(saveAttempt.Result.Result.ToString());
-                        return BadRequest("Saving new domain failed");
-                    }
                 }
+
+                var saveAttempt = _domainService.Save(domain);
+                if (saveAttempt == false)
+                {
+                    HttpContext.SetReasonPhrase(saveAttempt.Result.Result.ToString());
+                    return BadRequest("Saving new domain failed");
+                }
+
+                savedDomains.Add(domain);
             }
+
+            // Sort saved domains
+            _domainService.Sort(savedDomains);
 
             model.Valid = model.Domains.All(m => m.Duplicate == false);
 

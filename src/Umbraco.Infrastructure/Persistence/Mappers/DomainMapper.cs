@@ -18,6 +18,7 @@ namespace Umbraco.Cms.Infrastructure.Persistence.Mappers
             DefineMap<UmbracoDomain, DomainDto>(nameof(UmbracoDomain.RootContentId), nameof(DomainDto.RootStructureId));
             DefineMap<UmbracoDomain, DomainDto>(nameof(UmbracoDomain.LanguageId), nameof(DomainDto.DefaultLanguage));
             DefineMap<UmbracoDomain, DomainDto>(nameof(UmbracoDomain.DomainName), nameof(DomainDto.DomainName));
+            DefineMap<UmbracoDomain, DomainDto>(nameof(UmbracoDomain.SortOrder), nameof(DomainDto.SortOrder));
         }
     }
 }

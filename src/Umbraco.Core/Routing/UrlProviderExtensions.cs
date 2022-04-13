@@ -123,22 +123,17 @@ namespace Umbraco.Extensions
 
                 if (urlGroup.Key)
                 {
-                    result.AddRange(urlGroup.LegacyDistinctBy(x => x.Text.ToUpperInvariant())
-                        .OrderBy(x => x.Text).ThenBy(x => x.Culture));
+                    result.AddRange(urlGroup.LegacyDistinctBy(x => x.Text.ToUpperInvariant()));
                 }
                 else
                 {
                     result.AddRange(urlGroup);
                 }
-
-
-
             }
 
             // get the 'other' URLs - ie not what you'd get with GetUrl() but URLs that would route to the document, nevertheless.
             // for these 'other' URLs, we don't check whether they are routable, collide, anything - we just report them.
-            foreach (UrlInfo otherUrl in publishedUrlProvider.GetOtherUrls(content.Id).OrderBy(x => x.Text)
-                .ThenBy(x => x.Culture))
+            foreach (UrlInfo otherUrl in publishedUrlProvider.GetOtherUrls(content.Id))
             {
                 // avoid duplicates
                 if (urls.Add(otherUrl))

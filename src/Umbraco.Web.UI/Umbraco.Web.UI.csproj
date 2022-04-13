@@ -19,10 +19,8 @@
     <ProjectReference Include="..\Umbraco.Cms.Persistence.SqlServer\Umbraco.Cms.Persistence.SqlServer.csproj" />
   </ItemGroup>
 
-
   <ItemGroup>
     <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="68.2.0.9" />
-
     <RuntimeHostConfigurationOption Condition="$(RuntimeIdentifier.StartsWith('linux')) Or $(RuntimeIdentifier.StartsWith('win')) Or ('$(RuntimeIdentifier)' == '' And !$([MSBuild]::IsOSPlatform('osx')))" Include="System.Globalization.AppLocalIcu" Value="68.2.0.9" />
   </ItemGroup>
 
@@ -33,8 +31,7 @@
 
   <ItemGroup>
     <Compile Remove="umbraco/Data/**" />
-    <Compile Remove="umbraco/logs/**" />
-    <Compile Remove="umbraco/mediacache/**" />
+    <Compile Remove="umbraco/Logs/**" />
     <Compile Remove="wwwroot/umbraco/**" />
     <Compile Remove="App_Data/**" />
     <Compile Remove="Controllers\**" />
@@ -43,16 +40,14 @@
   <ItemGroup>
     <EmbeddedResource Remove="App_Data/**" />
     <EmbeddedResource Remove="umbraco/Data/**" />
-    <EmbeddedResource Remove="umbraco/logs/**" />
-    <EmbeddedResource Remove="umbraco/mediacache/**" />
+    <EmbeddedResource Remove="umbraco/Logs/**" />
     <EmbeddedResource Remove="Controllers\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Remove="App_Data/**" />
     <Content Remove="umbraco/Data/**" />
-    <Content Remove="umbraco/logs/**" />
-    <Content Remove="umbraco/mediacache/**" />
+    <Content Remove="umbraco/Logs/**" />
     <Content Remove="umbraco\UmbracoWebsite\NotFound.cshtml" />
     <Content Remove="wwwroot/Web.config" />
     <Content Remove="Controllers\**" />
@@ -70,8 +65,7 @@
     </None>
     <None Remove="App_Data/**" />
     <None Remove="umbraco/Data/**" />
-    <None Remove="umbraco/logs/**" />
-    <None Remove="umbraco/mediacache/**" />
+    <None Remove="umbraco/Logs/**" />
     <None Include="umbraco/UmbracoWebsite/NoNodes.cshtml" />
     <None Remove="Controllers\**" />
   </ItemGroup>
@@ -92,7 +86,8 @@
   <PropertyGroup>
     <RazorCompileOnBuild>false</RazorCompileOnBuild>
     <RazorCompileOnPublish>false</RazorCompileOnPublish>
-    <UseRazorSourceGenerator>false</UseRazorSourceGenerator> <!-- Disabling the Razor source generators in .NET 6 -->
+    <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+    <!-- Disabling the Razor source generators in .NET 6 -->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -124,19 +119,18 @@
     <Exec WorkingDirectory="$(ProjectDir)/../Umbraco.Web.UI.Client/" Command="npm run build:skip-tests" />
   </Target>
   <Target Name="JsonSchemaBuild">
-<!--    <Exec WorkingDirectory="$(ProjectDir)/../../" Command="powershell -ExecutionPolicy RemoteSigned -Command '&amp;dotnet run &#45;&#45;project $pwd/src/JsonSchema/JsonSchema.csproj -c Release &#45;&#45; &#45;&#45;outputFile $pwd/src/Umbraco.Web.UI/$(JsonSchemaPath)'" />-->
+    <!-- <Exec WorkingDirectory="$(ProjectDir)/../../" Command="powershell -ExecutionPolicy RemoteSigned -Command '&amp;dotnet run &#45;&#45;project $pwd/src/JsonSchema/JsonSchema.csproj -c Release &#45;&#45; &#45;&#45;outputFile $pwd/src/Umbraco.Web.UI/$(JsonSchemaPath)'" /> -->
   </Target>
   <Target Name="AppsettingsBuild">
-     <Message Text="Generating appsettings.json because it doesnt exist" Importance="High" />
-     <Copy SourceFiles="$(Projectdir)/appsettings.template.json" DestinationFiles="$(ProjectDir)/appsettings.json" />
+    <Message Text="Generating appsettings.json because it doesnt exist" Importance="High" />
+    <Copy SourceFiles="$(Projectdir)/appsettings.template.json" DestinationFiles="$(ProjectDir)/appsettings.json" />
   </Target>
   <Target Name="AppsettingsDevBuild">
     <Message Text="Generating appsettings.Development.json because it doesnt exist" Importance="High" />
     <Copy SourceFiles="$(ProjectDir)appsettings.Development.template.json" DestinationFiles="$(ProjectDir)appsettings.Development.json" />
   </Target>
 
-
-  <!-- clean Belle when cleaning and rebuilding, but only in Visual Studio -->
+  <!-- Clean Belle when cleaning and rebuilding, but only in Visual Studio -->
   <Target Name="CleanPreconditions" AfterTargets="Clean" Condition="'$(UmbracoBuild)' == ''">
     <Message Text="-CleanPreconditions-" Importance="high" />
     <Message Text="Nothing to clean, as $(BellePath) does not exist." Importance="High" Condition="!Exists('$(BellePath)')" />

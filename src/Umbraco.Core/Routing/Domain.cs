@@ -6,20 +6,22 @@ namespace Umbraco.Cms.Core.Routing
     public class Domain
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Domain"/> class.
+        /// Initializes a new instance of the <see cref="Domain" /> class.
         /// </summary>
         /// <param name="id">The unique identifier of the domain.</param>
         /// <param name="name">The name of the domain.</param>
         /// <param name="contentId">The identifier of the content which supports the domain.</param>
         /// <param name="culture">The culture of the domain.</param>
         /// <param name="isWildcard">A value indicating whether the domain is a wildcard domain.</param>
-        public Domain(int id, string name, int contentId, string culture, bool isWildcard)
+        /// <param name="sortOrder">The sort order.</param>
+        public Domain(int id, string name, int contentId, string culture, bool isWildcard, int sortOrder)
         {
             Id = id;
             Name = name;
             ContentId = contentId;
             Culture = culture;
             IsWildcard = isWildcard;
+            SortOrder = sortOrder;
         }
 
         /// <summary>
@@ -33,6 +35,7 @@ namespace Umbraco.Cms.Core.Routing
             ContentId = domain.ContentId;
             Culture = domain.Culture;
             IsWildcard = domain.IsWildcard;
+            SortOrder = domain.SortOrder;
         }
 
         /// <summary>
@@ -59,5 +62,13 @@ namespace Umbraco.Cms.Core.Routing
         /// Gets a value indicating whether the domain is a wildcard domain.
         /// </summary>
         public bool IsWildcard { get; }
+
+        /// <summary>
+        /// Gets the sort order.
+        /// </summary>
+        /// <value>
+        /// The sort order.
+        /// </value>
+        public int SortOrder { get; }
     }
 }

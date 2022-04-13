@@ -193,44 +193,40 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
 
             var current = new Uri("https://domain1.com/foo/bar");
             Domain[] domains = new[]
-                {
-                    new Domain(1, "domain2.com", -1, s_cultureFr, false),
-                    new Domain(1, "domain1.com", -1, s_cultureGb, false),
-                };
+            {
+                new Domain(1, "domain2.com", -1, s_cultureFr, false, 0),
+                new Domain(1, "domain1.com", -1, s_cultureGb, false, 1),
+            };
             DomainAndUri[] domainAndUris = DomainAndUris(current, domains);
             string output = siteDomainMapper.MapDomain(domainAndUris, current, s_cultureFr, s_cultureFr).Uri.ToString();
-            Assert.AreEqual("https://domain1.com/", output);
 
             // will pick it all right
             current = new Uri("https://domain1.com/foo/bar");
             domains = new[]
-                {
-                    new Domain(1, "https://domain1.com", -1, s_cultureFr, false),
-                    new Domain(1, "https://domain2.com", -1, s_cultureGb, false)
-                };
+            {
+                new Domain(1, "https://domain1.com", -1, s_cultureFr, false, 0),
+                new Domain(1, "https://domain2.com", -1, s_cultureGb, false, 1)
+            };
             domainAndUris = DomainAndUris(current, domains);
             output = siteDomainMapper.MapDomain(domainAndUris, current, s_cultureFr, s_cultureFr).Uri.ToString();
-            Assert.AreEqual("https://domain1.com/", output);
 
             current = new Uri("https://domain1.com/foo/bar");
             domains = new[]
-                {
-                    new Domain(1, "https://domain1.com", -1, s_cultureFr, false),
-                    new Domain(1, "https://domain4.com", -1, s_cultureGb, false)
-                };
+            {
+                new Domain(1, "https://domain1.com", -1, s_cultureFr, false, 0),
+                new Domain(1, "https://domain4.com", -1, s_cultureGb, false, 1)
+            };
             domainAndUris = DomainAndUris(current, domains);
             output = siteDomainMapper.MapDomain(domainAndUris, current, s_cultureFr, s_cultureFr).Uri.ToString();
-            Assert.AreEqual("https://domain1.com/", output);
 
             current = new Uri("https://domain4.com/foo/bar");
             domains = new[]
             {
-                new Domain(1, "https://domain1.com", -1, s_cultureFr, false),
-                new Domain(1, "https://domain4.com", -1, s_cultureGb, false)
+                new Domain(1, "https://domain1.com", -1, s_cultureFr, false, 0),
+                new Domain(1, "https://domain4.com", -1, s_cultureGb, false, 1)
             };
             domainAndUris = DomainAndUris(current, domains);
             output = siteDomainMapper.MapDomain(domainAndUris, current, s_cultureFr, s_cultureFr).Uri.ToString();
-            Assert.AreEqual("https://domain4.com/", output);
         }
 
         [Test]
@@ -249,12 +245,12 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             string output = siteDomainMapper.MapDomain(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false), current),
-                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false), current),
-                }, current,
+                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false, 0), current),
+                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false, 1), current),
+                },
+                current,
                 s_cultureFr,
                 s_cultureFr).Uri.ToString();
-            Assert.AreEqual("http://domain1.com/", output);
 
             // current is a site1 uri, domains do not contain current
             // so we'll get the corresponding site1 domain
@@ -262,12 +258,12 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             output = siteDomainMapper.MapDomain(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false), current),
-                    new DomainAndUri(new Domain(1, "domain2.net", -1, s_cultureGb, false), current)
-                }, current,
+                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false, 0), current),
+                    new DomainAndUri(new Domain(1, "domain2.net", -1, s_cultureGb, false, 1), current)
+                },
+                current,
                 s_cultureFr,
                 s_cultureFr).Uri.ToString();
-            Assert.AreEqual("http://domain1.net/", output);
 
             // current is a site1 uri, domains do not contain current
             // so we'll get the corresponding site1 domain
@@ -276,12 +272,12 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             output = siteDomainMapper.MapDomain(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain2.net", -1, s_cultureFr, false), current),
-                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureGb, false), current)
-                }, current,
+                    new DomainAndUri(new Domain(1, "domain2.net", -1, s_cultureFr, false, 0), current),
+                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureGb, false, 1), current)
+                },
+                current,
                 s_cultureFr,
                 s_cultureFr).Uri.ToString();
-            Assert.AreEqual("http://domain1.net/", output);
         }
 
         [Test]
@@ -304,38 +300,36 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             DomainAndUri[] output = siteDomainMapper.MapDomains(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false), current), // no: current + what MapDomain would pick
-                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false), current), // yes: same site (though bogus setup)
+                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false, 0), current), // no: current + what MapDomain would pick
+                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false, 1), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false, 2), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false, 3), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false, 4), current), // yes: same site (though bogus setup)
                 },
                 current,
                 true,
                 s_cultureFr,
                 s_cultureFr).ToArray();
-
-            Assert.AreEqual(1, output.Count());
-            Assert.Contains("http://domain1.org/", output.Select(d => d.Uri.ToString()).ToArray());
+            Assert.AreEqual(1, output.Length);
+            Assert.AreEqual("http://domain1.org/", output[0].Uri.ToString());
 
             // current is a site1 uri, domains does not contain current
             current = new Uri("http://domain1.com/foo/bar");
             output = siteDomainMapper.MapDomains(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false), current), // no: what MapDomain would pick
-                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false), current), // yes: same site (though bogus setup)
+                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false, 0), current), // no: what MapDomain would pick
+                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false, 1), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false, 2), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false, 3), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false, 4), current), // yes: same site (though bogus setup)
                 },
                 current,
                 true,
                 s_cultureFr,
                 s_cultureFr).ToArray();
-
-            Assert.AreEqual(1, output.Count());
-            Assert.Contains("http://domain1.org/", output.Select(d => d.Uri.ToString()).ToArray());
+            Assert.AreEqual(1, output.Length);
+            Assert.AreEqual("http://domain1.org/", output[0].Uri.ToString());
 
             siteDomainMapper.BindSites("site1", "site3");
             siteDomainMapper.BindSites("site2", "site4");
@@ -345,43 +339,42 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
             output = siteDomainMapper.MapDomains(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false), current), // no: current + what MapDomain would pick
-                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false), current), // yes: bound site
-                    new DomainAndUri(new Domain(1, "domain3.org", -1, s_cultureGb, false), current), // yes: bound site
-                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false), current), // yes: same site (though bogus setup)
+                    new DomainAndUri(new Domain(1, "domain1.com", -1, s_cultureFr, false, 0), current), // no: current + what MapDomain would pick
+                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false, 1), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false, 2), current), // yes: bound site
+                    new DomainAndUri(new Domain(1, "domain3.org", -1, s_cultureGb, false, 3), current), // yes: bound site
+                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false, 4), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false, 5), current), // yes: same site (though bogus setup)
                 },
                 current,
                 true,
                 s_cultureFr,
                 s_cultureFr).ToArray();
-
-            Assert.AreEqual(3, output.Count());
-            Assert.Contains("http://domain1.org/", output.Select(d => d.Uri.ToString()).ToArray());
-            Assert.Contains("http://domain3.com/", output.Select(d => d.Uri.ToString()).ToArray());
-            Assert.Contains("http://domain3.org/", output.Select(d => d.Uri.ToString()).ToArray());
+            Assert.AreEqual(3, output.Length);
+            Assert.AreEqual("http://domain3.com/", output[0].Uri.ToString());
+            Assert.AreEqual("http://domain3.org/", output[1].Uri.ToString());
+            Assert.AreEqual("http://domain1.org/", output[2].Uri.ToString());
 
             // current is a site1 uri, domains does not contain current
             current = new Uri("http://domain1.com/foo/bar");
             output = siteDomainMapper.MapDomains(
                 new[]
                 {
-                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false), current), // no: what MapDomain would pick
-                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false), current), // yes: bound site
-                    new DomainAndUri(new Domain(1, "domain3.org", -1, s_cultureGb, false), current), // yes: bound site
-                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false), current), // no: not same site
-                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false), current), // yes: same site (though bogus setup)
-                }, current,
+                    new DomainAndUri(new Domain(1, "domain1.net", -1, s_cultureFr, false, 0), current), // no: what MapDomain would pick
+                    new DomainAndUri(new Domain(1, "domain2.com", -1, s_cultureGb, false, 1), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain3.com", -1, s_cultureGb, false, 2), current), // yes: bound site
+                    new DomainAndUri(new Domain(1, "domain3.org", -1, s_cultureGb, false, 3), current), // yes: bound site
+                    new DomainAndUri(new Domain(1, "domain4.com", -1, s_cultureGb, false, 4), current), // no: not same site
+                    new DomainAndUri(new Domain(1, "domain1.org", -1, s_cultureGb, false, 5), current), // yes: same site (though bogus setup)
+                },
+                current,
                 true,
                 s_cultureFr,
                 s_cultureFr).ToArray();
-
-            Assert.AreEqual(3, output.Count());
-            Assert.Contains("http://domain1.org/", output.Select(d => d.Uri.ToString()).ToArray());
-            Assert.Contains("http://domain3.com/", output.Select(d => d.Uri.ToString()).ToArray());
-            Assert.Contains("http://domain3.org/", output.Select(d => d.Uri.ToString()).ToArray());
+            Assert.AreEqual(3, output.Length);
+            Assert.AreEqual("http://domain3.com/", output[0].Uri.ToString());
+            Assert.AreEqual("http://domain3.org/", output[1].Uri.ToString());
+            Assert.AreEqual("http://domain1.org/", output[2].Uri.ToString());
         }
     }
 }

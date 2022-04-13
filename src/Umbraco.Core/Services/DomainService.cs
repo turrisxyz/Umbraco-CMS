@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
@@ -97,6 +98,49 @@ namespace Umbraco.Cms.Core.Services
                 _domainRepository.Save(domainEntity);
                 scope.Complete();
                 scope.Notifications.Publish(new DomainSavedNotification(domainEntity, eventMessages).WithStateFrom(savingNotification));
+            }
+
+            return OperationResult.Attempt.Succeed(eventMessages);
+        }
+
+        public Attempt<OperationResult> Sort(IEnumerable<IDomain> items)
+        {
+            EventMessages eventMessages = EventMessagesFactory.Get();
+
+            var domains = items.ToArray();
+            if (domains.Length == 0)
+            {
+                return OperationResult.Attempt.NoOperation(eventMessages);
+            }
+
+            using (var scope = ScopeProvider.CreateScope())
+            {
+                var savingNotification = new DomainSavingNotification(domains, eventMessages);
+                if (scope.Notifications.PublishCancelable(savingNotification))
+                {
+                    scope.Complete();
+                    return OperationResult.Attempt.Cancel(eventMessages);
+                }
+
+                scope.WriteLock(Constants.Locks.Domains);
+
+                var sortOrder = 0;
+                foreach (var domain in domains)
+                {
+                    // If the current sort order equals that of the domain we don't need to update it, so just increment the sort order and continue
+                    if (domain.SortOrder == sortOrder)
+                    {
+                        sortOrder++;
+                        continue;
+                    }
+
+                    domain.SortOrder = sortOrder++;
+                    _domainRepository.Save(domain);
+                }
+
+                scope.Complete();
+
+                scope.Notifications.Publish(new DomainSavedNotification(domains, eventMessages).WithStateFrom(savingNotification));
             }
 
             return OperationResult.Attempt.Succeed(eventMessages);

@@ -454,7 +454,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
             var domains = _serviceContext.DomainService.GetAll(true);
             foreach (var domain in domains
                 .Where(x => x.RootContentId.HasValue && x.LanguageIsoCode.IsNullOrWhiteSpace() == false)
-                .Select(x => new Domain(x.Id, x.DomainName, x.RootContentId.Value, x.LanguageIsoCode, x.IsWildcard)))
+                .Select(x => new Domain(x.Id, x.DomainName, x.RootContentId.Value, x.LanguageIsoCode, x.IsWildcard, x.SortOrder)))
             {
                 _domainStore.SetLocked(domain.Id, domain);
             }
@@ -837,7 +837,7 @@ namespace Umbraco.Cms.Infrastructure.PublishedCache
                             if (domain.LanguageIsoCode.IsNullOrWhiteSpace())
                                 continue; // anomaly
                             var culture = domain.LanguageIsoCode;
-                            _domainStore.SetLocked(domain.Id, new Domain(domain.Id, domain.DomainName, domain.RootContentId.Value, culture, domain.IsWildcard));
+                            _domainStore.SetLocked(domain.Id, new Domain(domain.Id, domain.DomainName, domain.RootContentId.Value, culture, domain.IsWildcard, domain.SortOrder));
                             break;
                     }
                 }

@@ -130,7 +130,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
 
             var lookup = await GetContentFinder(urlString);
 
-            lookup.frequest.SetDomain(new DomainAndUri(new Domain(1, "mysite", -1, "en-US", false), new Uri("http://mysite/")));
+            lookup.frequest.SetDomain(new DomainAndUri(new Domain(1, "mysite", -1, "en-US", false, 0), new Uri("http://mysite/")));
 
             var result = lookup.finder.TryFindContent(lookup.frequest);
 
@@ -156,7 +156,7 @@ namespace Umbraco.Cms.Tests.UnitTests.Umbraco.Core.Routing
 
             var lookup = await GetContentFinder(urlString);
 
-            lookup.frequest.SetDomain(new DomainAndUri(new Domain(1, "mysite/æøå", -1, "en-US", false), new Uri("http://mysite/æøå")));
+            lookup.frequest.SetDomain(new DomainAndUri(new Domain(1, "mysite/æøå", -1, "en-US", false, 0), new Uri("http://mysite/æøå")));
 
             var result = lookup.finder.TryFindContent(lookup.frequest);
 
