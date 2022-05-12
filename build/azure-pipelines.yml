@@ -1,5 +1,15 @@
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
+parameters:
+  - name: sqlServerIntegrationTests
+    displayName: Run SQL Server Integration Tests
+    type: boolean
+    default: false
+  - name: myGetDeploy
+    displayName: Deploy to MyGet
+    type: boolean
+    default: false
+
 variables:
   buildConfiguration: Release
   SA_PASSWORD: UmbracoIntegration123!
@@ -24,119 +34,131 @@ resources:
       options: '--name mssql'
 
 stages:
-
+  ###############################################
+  ## Build
+  ###############################################
   - stage: Build
     jobs:
       - job:
-        displayName: build
+        displayName: Build Umbraco CMS
+        strategy:
+          matrix:
+            Windows:
+              vmImage: 'windows-latest'
+              artifactName: build_output_windows
+            Linux:
+              vmImage: 'ubuntu-latest'
+              artifactName: build_output_linux
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: $(vmImage)
         steps:
           - task: NodeTool@0
-            displayName: use node $(nodeVersion)
+            displayName: Use node $(nodeVersion)
             inputs:
               versionSpec: $(nodeVersion)
           - task: Cache@2
-            displayName: cache node_modules
+            displayName: Cache node_modules
             inputs:
-              key: '"node_modules" | "$(Agent.OS)" | $(Build.SourcesDirectory)/src/Umbraco.Web.UI.Client/package-lock.json'
+              key: '"umbraco_ui_client_node_modules" | "$(Agent.OS)" | $(Build.SourcesDirectory)/src/Umbraco.Web.UI.Client/package-lock.json'
               path: $(Build.SourcesDirectory)/src/Umbraco.Web.UI.Client/node_modules
               cacheHitVar: CACHE_RESTORED
           - task: Npm@1
-            displayName: npm ci
+            displayName: Run npm ci
             condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
             inputs:
               command: ci
               workingDir: src/Umbraco.Web.UI.Client
               verbose: false
           - task: gulp@0
-            displayName: gulp build
+            displayName: Run gulp build
             inputs:
               gulpFile: src/Umbraco.Web.UI.Client/gulpfile.js
-              targets: build
+              targets: coreBuild
               workingDirectory: src/Umbraco.Web.UI.Client
           - task: DotNetCoreCLI@2
-            displayName: dotnet build
+            displayName: Run dotnet build
             inputs:
               command: build
               projects: umbraco.sln
               arguments: '--configuration $(buildConfiguration)'
           - task: PublishPipelineArtifact@1
-            displayName: publish build artifacts
+            displayName: Publish build artifacts
             inputs:
               targetPath: $(Build.SourcesDirectory)
-              artifactName: build_output
+              artifactName: $(artifactName)
 
-  - stage: Unit_Tests
-    displayName: Unit Tests
+  ###############################################
+  ## Test
+  ###############################################
+  - stage: Test
+    displayName: Test
     dependsOn: Build
     jobs:
+      # Unit Tests
       - job:
-        displayName: unit tests
+        displayName: Unit Tests
         strategy:
           matrix:
-            windows:
+            Windows:
               vmImage: 'windows-latest'
-              artifactName: build_output
-            linux:
+              artifactName: build_output_windows
+            Linux:
               vmImage: 'ubuntu-latest'
-              artifactName: build_output
+              artifactName: build_output_linux
             macOS:
               vmImage: 'macOS-latest'
-              artifactName: build_output
+              artifactName: build_output_linux
         pool:
           vmImage: $(vmImage)
         steps:
           - checkout: none
           - task: DownloadPipelineArtifact@2
-            displayName: download build artifacts
+            displayName: Download build artifacts
             inputs:
               artifact: $(artifactName)
               path: $(Build.SourcesDirectory)
           - task: UseDotNet@2
-            condition: and(succeeded(), eq('$(Agent.OS)', 'Darwin')) # net6 already on the other images
-            displayName: use net6
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin')) # net6 already on the other images
+            displayName: Use net6
             inputs:
               version: 6.x
           - task: DotNetCoreCLI@2
-            displayName: dotnet test
+            displayName: Run dotnet test
             inputs:
               command: test
               projects: '**/*.Tests.UnitTests.csproj'
               arguments: '--no-build --configuration $(buildConfiguration)'
 
-  - stage: Integration_Tests_SQLite
-    displayName: Integration Tests (SQLite)
-    dependsOn: Build
-    jobs:
+      # Integration Tests (SQLite)
       - job:
-        displayName: integration tests (SQLite)
+        displayName: Integration Tests (SQLite)
         strategy:
           matrix:
-            windows:
+            Windows:
               vmImage: 'windows-latest'
-              artifactName: build_output
-            linux:
+              artifactName: build_output_windows
+            Linux:
               vmImage: 'ubuntu-latest'
-              artifactName: build_output
+              artifactName: build_output_linux
             macOS:
               vmImage: 'macOS-latest'
-              artifactName: build_output
+              artifactName: build_output_linux
         pool:
           vmImage: $(vmImage)
         steps:
           - checkout: none
           - task: DownloadPipelineArtifact@2
-            displayName: download build artifacts
+            displayName: Download build artifacts
             inputs:
               artifact: $(artifactName)
               path: $(Build.SourcesDirectory)
           - task: UseDotNet@2
-            displayName: use net6
+            displayName: Use net6
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin')) # net6 already on the other images
             inputs:
               version: 6.x
           - task: DotNetCoreCLI@2
-            displayName: dotnet test
+            displayName: Run dotnet test
             inputs:
               command: test
               projects: '**/Umbraco.Tests.Integration.csproj'
@@ -145,63 +167,159 @@ stages:
               Tests__Database__DatabaseType: 'Sqlite'
               Umbraco__Cms__global__MainDomLock: 'FileSystemMainDomLock'
 
-  - stage: Integration_Tests_SQLServer
-    condition: not(or(variables.isDev, variables.isFeature))
-    displayName: Integration Tests (SQL Server)
-    dependsOn: Build
-    jobs:
+      # Integration Tests (SQL Server)
       - job:
-        pool:
-          vmImage: 'ubuntu-latest'
+        condition: or(not(or(variables.isDev, variables.isFeature)), ${{parameters.sqlServerIntegrationTests}})
+        displayName: Integration Tests (SQL Server) Linux
         timeoutInMinutes: 120
         services:
           mssql: mssql
-        displayName: integration tests (SQL Server) linux
+        pool:
+          vmImage: 'ubuntu-latest'
         steps:
           - checkout: none
           - task: DownloadPipelineArtifact@2
-            displayName: download build artifacts
+            displayName: Download build artifacts
             inputs:
-              artifact: build_output
+              artifact: build_output_linux
               path: $(Build.SourcesDirectory)
-          - task: UseDotNet@2
-            displayName: use net6
-            inputs:
-              version: 6.x
           - task: DotNetCoreCLI@2
-            displayName: dotnet test
+            displayName: Run dotnet test
             inputs:
               command: test
               projects: '**/Umbraco.Tests.Integration.csproj'
               arguments: '--no-build --configuration $(buildConfiguration)'
             env:
-              Tests__Database__DatabaseType: 'SqlServer'
               Tests__Database__SQLServerMasterConnectionString: 'Server=localhost,1433;User Id=sa;Password=$(SA_PASSWORD);'
-              Umbraco__Cms__global__MainDomLock: 'SqlMainDomLock'
+              Tests__Database__DatabaseType: SqlServer
+              Umbraco__Cms__global__MainDomLock: SqlMainDomLock
+
       - job:
+        condition: or(not(or(variables.isDev, variables.isFeature)), ${{parameters.sqlServerIntegrationTests}})
+        displayName: Integration Tests (SQL Server) Windows
         timeoutInMinutes: 120
-        displayName: integration tests (SQL Server) windows
         pool:
-          vmImage: 'windows-latest'
+          vmImage:  'windows-latest'
         steps:
           - checkout: none
           - task: DownloadPipelineArtifact@2
-            displayName: download build artifacts
+            displayName: Download build artifacts
             inputs:
-              artifact: build_output
+              artifact: build_output_windows
               path: $(Build.SourcesDirectory)
           - powershell: sqllocaldb start mssqllocaldb
-            displayName: start localdb
-          - task: UseDotNet@2
-            displayName: use net6
-            inputs:
-              version: 6.x
+            displayName: Start localdb
           - task: DotNetCoreCLI@2
-            displayName: dotnet test
+            displayName: Run dotnet test
             inputs:
               command: test
               projects: '**/Umbraco.Tests.Integration.csproj'
               arguments: '--no-build --configuration $(buildConfiguration)'
             env:
-              Tests__Database__DatabaseType: 'LocalDb'
-              Umbraco__Cms__global__MainDomLock: 'MainDomSemaphoreLock'
+              Tests__Database__DatabaseType: LocalDb
+              Umbraco__Cms__global__MainDomLock: MainDomSemaphoreLock
+
+      # E2E Tests
+      - job:
+        displayName: E2E Tests
+        variables:
+          - name: ConnectionStrings__umbracoDbDSN
+            value: Data Source=|DataDirectory|/umbraco-cms-cypress.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True;
+          - name: ConnectionStrings__umbracoDbDSN_ProviderName
+            value: Microsoft.Data.SQLite
+          - name: Umbraco__CMS__Unattended__InstallUnattended
+            value: true
+          - name: Umbraco__CMS__Unattended__UnattendedUserName
+            value: Cypress Test
+          - name: Umbraco__CMS__Unattended__UnattendedUserEmail
+            value: cypress@umbraco.com
+          - name: Umbraco__CMS__Unattended__UnattendedUserPassword
+            value: UmbracoAcceptance123!
+          - name: Umbraco__CMS__Global__InstallMissingDatabase
+            value: true
+        strategy:
+          matrix:
+            Windows:
+              vmImage: 'windows-latest'
+              artifactName: build_output_windows
+            Linux:
+              vmImage: 'ubuntu-latest'
+              artifactName: build_output_linux
+        pool:
+            vmImage: $(vmImage)
+        steps:
+          - checkout: none
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build artifacts
+            inputs:
+              artifact: $(artifactName)
+              path: $(Build.SourcesDirectory)
+          - task: NodeTool@0
+            displayName: Use Node $(nodeVersion)
+            inputs:
+                versionSpec: $(nodeVersion)
+          - task: Cache@2
+            displayName: Cache node_modules
+            inputs:
+              key: '"e2e_test_node_modules" | "$(Agent.OS)" | $(Build.SourcesDirectory)/tests/Umbraco.Tests.AcceptanceTest/package-lock.json'
+              path: $(Build.SourcesDirectory)/tests/Umbraco.Tests.AcceptanceTest/node_modules
+              cacheHitVar: CACHE_RESTORED
+          - task: Npm@1
+            displayName: Run npm ci
+            condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+            inputs:
+              command: ci
+              workingDir: $(Build.SourcesDirectory)/tests/Umbraco.Tests.AcceptanceTest/
+              verbose: false
+          - task: PowerShell@2
+            displayName: Start application (Windows)
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+            inputs:
+              workingDirectory: $(Build.SourcesDirectory)/src/Umbraco.Web.UI
+              targetType: inline
+              script: Start-Process -RedirectStandardOutput $(Build.ArtifactStagingDirectory)/dotnet_run_windows.txt -FilePath "dotnet" -ArgumentList "run --no-build --configuration $(buildConfiguration)"
+          - task: Bash@3
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+            displayName: Fix permissions # lost during artifact creation
+            inputs:
+              workingDirectory: $(Build.SourcesDirectory)/src/Umbraco.Web.UI
+              targetType: 'inline'
+              script: chmod +x bin/Release/net6.0/Umbraco.Web.UI
+          - task: Bash@3
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+            displayName: Start application (Linux)
+            inputs:
+              workingDirectory: $(Build.SourcesDirectory)/src/Umbraco.Web.UI
+              targetType: 'inline'
+              script: 'nohup dotnet run --no-build --configuration $(buildConfiguration) > $(Build.ArtifactStagingDirectory)/dotnet_run_linux.txt &'
+          - task: PowerShell@2
+            displayName: Generate Cypress.env.json
+            inputs:
+              targetType: inline
+              script: >
+                @{ username = "$(Umbraco__CMS__Unattended__UnattendedUserEmail)"; password = "$(Umbraco__CMS__Unattended__UnattendedUserPassword)" } | ConvertTo-Json | Set-Content -Path "tests/Umbraco.Tests.AcceptanceTest/cypress.env.json"
+          - task: PowerShell@2
+            displayName: Run Cypress (Desktop)
+            condition: always()
+            continueOnError: true
+            inputs:
+                targetType: inline
+                workingDirectory: tests/Umbraco.Tests.AcceptanceTest
+                script: 'npm run test -- --reporter junit --reporter-options "mochaFile=results/test-output-D-[hash].xml,toConsole=true" --config="viewportHeight=1600,viewportWidth=2560,screenshotsFolder=cypress/artifacts/desktop/screenshots,videosFolder=cypress/artifacts/desktop/videos,videoUploadOnPasses=false"'
+          - task: PublishTestResults@2
+            displayName: Publish test results
+            condition: always()
+            inputs:
+                testResultsFormat: 'JUnit'
+                testResultsFiles: 'tests/Umbraco.Tests.AcceptanceTest/results/test-output-D-*.xml'
+                mergeTestResults: true
+                testRunTitle: "Test results Desktop"
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: $(Build.SourcesDirectory)/tests/Umbraco.Tests.AcceptanceTest/cypress/artifacts
+              targetFolder: $(Build.ArtifactStagingDirectory)/cypresss
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish test artifacts"
+            inputs:
+                targetPath: $(Build.ArtifactStagingDirectory)
+                artifact: 'E2E artifacts - $(Agent.OS) - Attempt #$(System.JobAttempt)'
