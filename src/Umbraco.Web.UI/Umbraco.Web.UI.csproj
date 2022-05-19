@@ -59,6 +59,7 @@
  
   
   <Target Name="JsonSchemaBuild">
+    <Exec Command="dotnet run -c Release --project $(JsonSchemaProjectPath) -o $(ProjectDir)appsettings-schema.json" />
     <Exec Command="dotnet run -c Release --project $(JsonSchemaProjectPath) -o &quot;$(ProjectDir)appsettings-schema.json&quot;" />
   </Target>
   
