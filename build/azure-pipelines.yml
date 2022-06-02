@@ -283,8 +283,7 @@ stages:
       # Integration Tests (SQL Server)
       - job:
         timeoutInMinutes: 120
-        condition: or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ${{parameters.sqlServerIntegrationTests}})
-        displayName: Integration Tests (SQL Server)
+        displayName: Integration Tests (SQL Server - Linux)
         strategy:
           parallel: 2
         pool:
@@ -312,8 +311,7 @@ stages:
       # Integration Tests (SQL Server)
       - job:
         timeoutInMinutes: 120
-        condition: or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ${{parameters.sqlServerIntegrationTests}})
-        displayName: Integration Tests (SQL Server)
+        displayName: Integration Tests (SQL Server - Windows)
         strategy:
           parallel: 2
         pool:
