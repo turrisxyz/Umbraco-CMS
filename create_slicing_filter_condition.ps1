@@ -1,7 +1,7 @@
-<#  
-.SYNOPSIS  
-    Distribute the tests in VSTS pipeline across multiple agents 
-.DESCRIPTION  
+<#
+.SYNOPSIS
+    Distribute the tests in VSTS pipeline across multiple agents
+.DESCRIPTION
     This script slices tests files across multiple agents for faster execution.
     We search for specific type of file structure (in this example test*), and slice them according to agent number
     If we encounter multiple files [file1..file10] and if we have 2 agents, agent1 executes tests odd number of files while agent2 executes even number of files
@@ -36,11 +36,11 @@ For ($i=$agentNumber; $i -le $testCount;) {
     $file = $tests[$i-1]
     $testsToRun = $testsToRun + $file
     Write-Host "Added $file"
-    $i = $i + $totalAgents 
+    $i = $i + $totalAgents
  }
 
 # join all test files seperated by space. pytest runs multiple test files in following format pytest test1.py test2.py test3.py
 $targetTestsFilter = $testsToRun -Join " "
 Write-Host "Test files $targetTestsFilter"
-# write these files into variable so that we can run them using pytest in subsequent task. 
-Write-Host "##vso[task.setvariable variable=targetTestsFilter;]$targetTestsFilter" 
+# write these files into variable so that we can run them using pytest in subsequent task.
+Write-Host "##vso[task.setvariable variable=targetTestsFilter;]$targetTestsFilter"
