@@ -17,7 +17,7 @@ Set-Location "$location/tests"
 $newDir = Get-ChildItem
 Write-Host "NewDir: $newDir"
 Set-Location "Umbraco.Tests.Integration"
-$tests = dotnet test --no-build --list-tests # search for test files with specific pattern.
+$tests = dotnet test --list-tests # search for test files with specific pattern.
 $totalAgents = [int]$Env:SYSTEM_TOTALJOBSINPHASE # standard VSTS variables available using parallel execution; total number of parallel jobs running
 $agentNumber = [int]$Env:SYSTEM_JOBPOSITIONINPHASE  # current job position
 $testCount = $tests.Count
