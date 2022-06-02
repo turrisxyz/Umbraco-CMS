@@ -248,6 +248,7 @@ stages:
       - job:
         displayName: Integration Tests (SQLite)
         strategy:
+          maxParallel: 9
           matrix:
             Windows:
               vmImage: 'windows-latest'
