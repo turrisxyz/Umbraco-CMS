@@ -11,6 +11,8 @@
 
 $location = Get-Location
 Write-Host "Location: $location"
+$dir = Get-ChildItems
+Write-Host "Dir: $dir"
 
 $tests = dotnet test tests/Umbraco.Tests.Integration/Umbraco.Tests.Integration.csproj --no-build --list-tests # search for test files with specific pattern.
 $totalAgents = [int]$Env:SYSTEM_TOTALJOBSINPHASE # standard VSTS variables available using parallel execution; total number of parallel jobs running
