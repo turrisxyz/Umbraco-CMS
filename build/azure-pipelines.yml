@@ -248,7 +248,6 @@ stages:
       - job:
         displayName: Integration Tests (SQLite)
         strategy:
-          maxParallel: 9
           matrix:
             Windows:
               vmImage: 'windows-latest'
@@ -296,7 +295,7 @@ stages:
               path: $(Build.SourcesDirectory)
           - powershell: docker run --name mssql -d -p 1433:1433 -e ACCEPT_EULA=Y -e SA_PASSWORD=$(SA_PASSWORD) -e MSSQL_PID=Developer mcr.microsoft.com/mssql/server:2019-latest
             displayName: Start SQL Server (Linux only)
-          - powershell: ./create_slicing_filter_condition.ps1 -$(Build.SourcesDirectory)
+          - powershell: ./create_slicing_filter_condition.ps1 -$(buildConfiguration)
             displayName: 'Create slicing filter condition'
           - task: DotNetCoreCLI@2
             displayName: Run dotnet test
