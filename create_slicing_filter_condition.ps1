@@ -9,7 +9,7 @@
     We use JUnit style test results to publish the test reports.
 #>
 
-$tests = Get-ChildItem .\ -Filter "test*" # search for test files with specific pattern.
+$tests = dotnet test **/*.Tests.Integration.csproj --no-build --list-tests # search for test files with specific pattern.
 $totalAgents = [int]$Env:SYSTEM_TOTALJOBSINPHASE # standard VSTS variables available using parallel execution; total number of parallel jobs running
 $agentNumber = [int]$Env:SYSTEM_JOBPOSITIONINPHASE  # current job position
 $testCount = $tests.Count
@@ -40,4 +40,4 @@ For ($i=$agentNumber; $i -le $testCount;) {
 $targetTestsFilter = $testsToRun -Join " "
 Write-Host "Test files $targetTestsFilter"
 # write these files into variable so that we can run them using pytest in subsequent task. 
-Write-Host "##vso[task.setvariable variable=pytestfiles;]$targetTestsFilter" 
+Write-Host "##vso[task.setvariable variable=targetTestsFilter;]$targetTestsFilter" 
