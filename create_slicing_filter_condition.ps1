@@ -11,7 +11,7 @@
 
 $location = Get-Location
 Write-Host "Location: $location"
-$dir = Get-ChildItems
+$dir = Get-ChildItem
 Write-Host "Dir: $dir"
 
 $tests = dotnet test tests/Umbraco.Tests.Integration/Umbraco.Tests.Integration.csproj --no-build --list-tests # search for test files with specific pattern.
