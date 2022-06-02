@@ -9,6 +9,8 @@
     We use JUnit style test results to publish the test reports.
 #>
 
+Write-Host Get-Location
+
 $tests = dotnet test **/*.Tests.Integration.csproj --no-build --list-tests # search for test files with specific pattern.
 $totalAgents = [int]$Env:SYSTEM_TOTALJOBSINPHASE # standard VSTS variables available using parallel execution; total number of parallel jobs running
 $agentNumber = [int]$Env:SYSTEM_JOBPOSITIONINPHASE  # current job position
