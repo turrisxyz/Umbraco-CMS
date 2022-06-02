@@ -302,7 +302,7 @@ stages:
             displayName: Run dotnet test
             inputs:
               command: test
-              projects: 'tests/Umbraco.Tests.Integration.csproj'
+              projects: 'tests/Umbraco.Tests.Integration/Umbraco.Tests.Integration.csproj'
               arguments: '--no-build --configuration $(buildConfiguration) --filter "$(targetTestsFilter)"'
               testRunTitle: Integration Tests SQL Server - $(Agent.OS)
             env:
