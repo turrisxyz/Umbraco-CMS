@@ -298,7 +298,7 @@ stages:
             displayName: Start SQL Server (Linux only)
           - bash: |
               tests=($(dotnet test . --no-build --list-tests | grep Test_))
-              . 'create_slicing_filter_condition.sh' $tests
+              > 'create_slicing_filter_condition.sh' $tests
             displayName: 'Create slicing filter condition'
           - task: DotNetCoreCLI@2
             displayName: Run dotnet test
